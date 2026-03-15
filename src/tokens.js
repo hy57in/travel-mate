@@ -38,19 +38,19 @@ export const THEME_LIGHT = `
 `;
 
 export const THEME_DARK = `
-  --c-coral: #F08878; --c-coral-lt: #2D1A18; --c-peach: #161218;
-  --c-indigo: #7B8AC4; --c-indigo-lt: #1A1D30;
-  --c-mint: #4ECEC6; --c-mint-lt: #142825;
-  --c-amber: #F0A862; --c-amber-lt: #2D2418;
-  --c-violet: #8A72F0; --c-violet-lt: #201A30;
+  --c-coral: #F08878; --c-coral-lt: #3D2220; --c-peach: #161218;
+  --c-indigo: #9AA6D6; --c-indigo-lt: #222540;
+  --c-mint: #5ED8D0; --c-mint-lt: #1A3330;
+  --c-amber: #F0A862; --c-amber-lt: #3D3020;
+  --c-violet: #A08CF0; --c-violet-lt: #2A2240;
   --c-sand: #12101A; --c-cream: #161220;
-  --c-text: #E8E6F0; --c-text-soft: #A0A0B8; --c-text-muted: #6B6B80;
-  --c-glass: rgba(28,24,40,0.85); --c-glass-border: rgba(255,255,255,0.08);
+  --c-text: #EEEDF5; --c-text-soft: #B8B8D0; --c-text-muted: #8080A0;
+  --c-glass: rgba(28,24,40,0.88); --c-glass-border: rgba(255,255,255,0.10);
   --c-shadow: 0 2px 12px rgba(0,0,0,0.25);
   --c-shadow-lg: 0 8px 28px rgba(0,0,0,0.35);
-  --c-input-border: #3A3850; --c-input-bg: rgba(40,36,56,0.85);
-  --c-card-bg: #1E1A2E; --c-divider: #2A2838; --c-item-bg: #2A2838;
-  --c-budget-grad: #1A1530; --c-pill-bg: rgba(40,36,56,0.7);
+  --c-input-border: #444260; --c-input-bg: rgba(44,40,64,0.85);
+  --c-card-bg: #1E1A2E; --c-divider: #2A2838; --c-item-bg: #322E48;
+  --c-budget-grad: #1A1530; --c-pill-bg: rgba(50,46,72,0.75);
   --c-danger: #F87171; --c-danger-border: #7F1D1D; --c-switch-off: #4A4860;
 `;
 

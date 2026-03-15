@@ -20,12 +20,13 @@ export default function useAuth() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = useCallback(async () => {
-    if (!supabase) return;
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin },
+  const signInWithEmail = useCallback(async (email) => {
+    if (!supabase) return { error: "Supabase not configured" };
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin },
     });
+    return { error: error?.message };
   }, []);
 
   const signOut = useCallback(async () => {
@@ -34,5 +35,5 @@ export default function useAuth() {
     setUser(null);
   }, []);
 
-  return { user, loading, signInWithGoogle, signOut, isOnline: !!supabase };
+  return { user, loading, signInWithEmail, signOut, isOnline: !!supabase };
 }

@@ -110,9 +110,6 @@ const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
 - custom hooks 분리 (useTrips, useTheme)
 - 의미 있는 prop 이름으로 리팩토링
 
-## 마이그레이션 참고 (아티팩트 → 독립 React 앱)
-아티팩트 환경에서 클로드코드 독립 프로젝트로 옮길 때 주의:
-- `window.storage` → localStorage 또는 IndexedDB로 교체
-- shadcn/ui Dialog, Switch → 직접 설치하거나 대체 라이브러리
-- @import 폰트 → index.html 또는 CSS 파일로 이동
-- 단일 .jsx → 컴포넌트 분리 (App, ItineraryTab, BudgetTab, ChecklistTab, MemoTab, 각 Form 등)
+## Research & Plans
+- `.claude/research/travel-services-analysis.md` — 경쟁 서비스 분석 (Wanderlog, TripIt, 트리플 등), 기능 갭 분석, 구현 우선순위
+- `.claude/research/ux-audit-and-improvement-plan.md` — UX 감사 결과, P0-P2 이슈 목록, 스프린트 계획, 디자인 원칙

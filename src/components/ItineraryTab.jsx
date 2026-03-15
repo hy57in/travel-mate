@@ -6,7 +6,7 @@ import { S, T, TYPE_EMOJI } from "../tokens";
 import { glass, inputStyle } from "../styles";
 import Empty from "./ui/Empty";
 
-function SortableItem({ id, di, ii, item, isNext, setDlg }) {
+function SortableItem({ id, di, ii, item, isNext, setDialog }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -18,7 +18,7 @@ function SortableItem({ id, di, ii, item, isNext, setDlg }) {
   return (
     <div ref={setNodeRef} style={{ ...style, display: "flex", alignItems: "center", gap: S.sm, padding: `${S.sm}px ${S.md}px`, borderRadius: T.rSm, transition: "all 0.15s", background: isDragging ? "rgba(255,255,255,0.95)" : isNext ? T.mintLight : item.hl ? T.coralLight : item.pend ? T.amberLight : "transparent", borderLeft: isNext ? `3px solid ${T.mint}` : item.hl ? `3px solid ${T.coral}` : item.pend ? `3px solid ${T.amber}` : "3px solid transparent", boxShadow: isDragging ? T.shadowLg : isNext ? `0 0 0 1px ${T.mint}33` : "none" }}>
       <div {...attributes} {...listeners} style={{ cursor: "grab", touchAction: "none", fontSize: 14, color: T.textMuted, flexShrink: 0, padding: `${S.xs}px`, lineHeight: 1, userSelect: "none" }}>⠿</div>
-      <div style={{ display: "flex", alignItems: "center", gap: S.sm, flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setDlg({ type: "item", dayIdx: di, itemIdx: ii })}>
+      <div style={{ display: "flex", alignItems: "center", gap: S.sm, flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setDialog({ type: "item", dayIdx: di, itemIdx: ii })}>
         <div style={{ width: 34, height: 34, borderRadius: S.sm, background: item.hl ? `linear-gradient(135deg, ${T.coral}, ${T.amber})` : T.itemBg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
           {TYPE_EMOJI[item.type] || "📍"}
         </div>
@@ -34,13 +34,13 @@ function SortableItem({ id, di, ii, item, isNext, setDlg }) {
   );
 }
 
-export default function ItineraryTab({ trip, exDay, setExDay, sortDay, reorderItems, addDay, deleteDay, updateDay, todayDayIdx, setDlg }) {
+export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDayItemsItems, reorderItems, addDay, deleteDay, updateDay, todayDayIndex, setDialog }) {
   const [editingDay, setEditingDay] = useState(null);
 
   // 오늘 Day의 "다음 일정" 인덱스 계산
   const nextItemIdx = (() => {
-    if (todayDayIdx < 0) return -1;
-    const day = trip.days[todayDayIdx];
+    if (todayDayIndex < 0) return -1;
+    const day = trip.days[todayDayIndex];
     if (!day?.items.length) return -1;
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
@@ -66,11 +66,11 @@ export default function ItineraryTab({ trip, exDay, setExDay, sortDay, reorderIt
   return (
     <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.md }}>
       {trip.days.map((day, di) => {
-        const open = exDay === di;
+        const open = expandedDay === di;
         const isEditing = editingDay === di;
         return (
           <div key={di} style={{ ...glass, overflow: "hidden", transition: "all 0.2s" }}>
-            <button onClick={() => setExDay(open ? -1 : di)} style={{ width: "100%", textAlign: "left", padding: `${S.lg}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.md, border: "none", background: "transparent", cursor: "pointer" }}>
+            <button onClick={() => setExpandedDay(open ? -1 : di)} style={{ width: "100%", textAlign: "left", padding: `${S.lg}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.md, border: "none", background: "transparent", cursor: "pointer" }}>
               <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, minWidth: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, letterSpacing: 0.5 }}>DAY</span>
                 <span style={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>{di + 1}</span>
@@ -78,7 +78,7 @@ export default function ItineraryTab({ trip, exDay, setExDay, sortDay, reorderIt
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: S.sm }}>
                   <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{day.title}</span>
-                  {todayDayIdx === di && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 50, background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", flexShrink: 0 }}>오늘</span>}
+                  {todayDayIndex === di && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 50, background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", flexShrink: 0 }}>오늘</span>}
                 </div>
                 <div style={{ fontSize: 11, color: T.textSoft, marginTop: S.xs }}>{day.date}</div>
               </div>
@@ -115,15 +115,15 @@ export default function ItineraryTab({ trip, exDay, setExDay, sortDay, reorderIt
                   <SortableContext items={day.items.map((_, ii) => `item-${ii}`)} strategy={verticalListSortingStrategy}>
                     <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
                       {day.items.map((item, ii) => (
-                        <SortableItem key={ii} id={`item-${ii}`} di={di} ii={ii} item={item} isNext={todayDayIdx === di && nextItemIdx === ii} setDlg={setDlg} />
+                        <SortableItem key={ii} id={`item-${ii}`} di={di} ii={ii} item={item} isNext={todayDayIndex === di && nextItemIdx === ii} setDialog={setDialog} />
                       ))}
                     </div>
                   </SortableContext>
                 </DndContext>
 
                 <div style={{ display: "flex", gap: S.sm, marginTop: S.md }}>
-                  <button onClick={() => sortDay(di)} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px solid ${T.inputBorder}`, background: T.glass, fontSize: 12, fontWeight: 600, color: T.textSoft, cursor: "pointer" }}>⏱ 시간순</button>
-                  <button onClick={() => setDlg({ type: "item", dayIdx: di, isNew: true })} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px dashed ${T.coral}`, background: T.coralLight, fontSize: 12, fontWeight: 600, color: T.coral, cursor: "pointer" }}>＋ 추가</button>
+                  <button onClick={() => sortDayItems(di)} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px solid ${T.inputBorder}`, background: T.glass, fontSize: 12, fontWeight: 600, color: T.textSoft, cursor: "pointer" }}>⏱ 시간순</button>
+                  <button onClick={() => setDialog({ type: "item", dayIdx: di, isNew: true })} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px dashed ${T.coral}`, background: T.coralLight, fontSize: 12, fontWeight: 600, color: T.coral, cursor: "pointer" }}>＋ 추가</button>
                 </div>
               </div>
             )}

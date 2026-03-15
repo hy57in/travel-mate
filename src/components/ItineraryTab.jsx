@@ -77,7 +77,7 @@ export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDa
         const isEditing = editingDay === di;
         return (
           <div key={di} ref={todayDayIndex === di ? todayRef : null} style={{ ...glass, overflow: "hidden", transition: "all 0.2s" }}>
-            <button onClick={() => setExpandedDay(open ? -1 : di)} style={{ width: "100%", textAlign: "left", padding: `${S.lg}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.md, border: "none", background: "transparent", cursor: "pointer" }}>
+            <button className="day-header" onClick={() => setExpandedDay(open ? -1 : di)} style={{ width: "100%", textAlign: "left", padding: `${S.lg}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.md, border: "none", background: "transparent", cursor: "pointer", borderRadius: T.r, transition: "background 0.15s" }}>
               <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, minWidth: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, letterSpacing: 0.5 }}>DAY</span>
                 <span style={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>{di + 1}</span>

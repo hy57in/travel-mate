@@ -110,6 +110,7 @@ export default function App() {
         @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) textarea, :root:not([data-theme="light"]) select { color-scheme: dark; } }
         button:disabled { opacity: 0.4; cursor: not-allowed; }
         button:active:not(:disabled) { transform: scale(0.97); }
+        .day-header:active { background: ${T.glassBorder} !important; }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         html { scroll-behavior: smooth; overscroll-behavior: contain; }
       `}</style>

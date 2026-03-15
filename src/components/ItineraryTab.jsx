@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { S, T, TYPE_EMOJI } from "../tokens";
 import { glass, inputStyle } from "../styles";
 import Empty from "./ui/Empty";
+import Timeline from "./ui/Timeline";
 import { geocodeBatch } from "../utils/geocode";
 
 function SortableItem({ id, di, ii, item, isNext, setDialog }) {
@@ -38,6 +39,7 @@ function SortableItem({ id, di, ii, item, isNext, setDialog }) {
 export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDayItems, reorderItems, addDay, deleteDay, updateDay, todayDayIndex, weather, setDialog }) {
   const [editingDay, setEditingDay] = useState(null);
   const [geocoding, setGeocoding] = useState(-1);
+  const [viewMode, setViewMode] = useState("list"); // "list" | "timeline"
   const todayRef = useRef(null);
 
   useEffect(() => {
@@ -123,17 +125,22 @@ export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDa
                   </div>
                 )}
 
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd(di)}>
-                  <SortableContext items={day.items.map((_, ii) => `item-${ii}`)} strategy={verticalListSortingStrategy}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
-                      {day.items.map((item, ii) => (
-                        <SortableItem key={ii} id={`item-${ii}`} di={di} ii={ii} item={item} isNext={todayDayIndex === di && nextItemIdx === ii} setDialog={setDialog} />
-                      ))}
-                    </div>
-                  </SortableContext>
-                </DndContext>
+                {viewMode === "timeline" ? (
+                  <Timeline items={day.items} todayDayIndex={todayDayIndex} dayIndex={di} nextItemIdx={nextItemIdx} onItemClick={(ii) => setDialog({ type: "item", dayIdx: di, itemIdx: ii })} />
+                ) : (
+                  <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd(di)}>
+                    <SortableContext items={day.items.map((_, ii) => `item-${ii}`)} strategy={verticalListSortingStrategy}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
+                        {day.items.map((item, ii) => (
+                          <SortableItem key={ii} id={`item-${ii}`} di={di} ii={ii} item={item} isNext={todayDayIndex === di && nextItemIdx === ii} setDialog={setDialog} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
 
                 <div style={{ display: "flex", gap: S.sm, marginTop: S.md }}>
+                  <button onClick={() => setViewMode(viewMode === "list" ? "timeline" : "list")} style={{ padding: `${S.sm}px ${S.md}px`, borderRadius: T.rSm, border: `1.5px solid ${T.inputBorder}`, background: T.glass, fontSize: 12, fontWeight: 600, color: T.textSoft, cursor: "pointer", flexShrink: 0 }}>{viewMode === "list" ? "📋" : "⠿"}</button>
                   <button onClick={() => sortDayItems(di)} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px solid ${T.inputBorder}`, background: T.glass, fontSize: 12, fontWeight: 600, color: T.textSoft, cursor: "pointer" }}>⏱ 시간순</button>
                   {day.items.some(it => !it.lat) && (
                     <button

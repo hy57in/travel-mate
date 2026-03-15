@@ -8,18 +8,41 @@ const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_KEY || "";
 const DAY_COLORS = ["#F47B6E", "#FFAD6B", "#4ECDC4", "#8B5CF6", "#2B2D42", "#FF6B6B", "#38D9A9"];
 const TOKYO = { lat: 35.6812, lng: 139.7671 };
 
-function RouteLine({ points, color }) {
+function RouteLine({ points, color, animate }) {
   const map = useMap();
   useEffect(() => {
     if (!map || !window.google || points.length < 2) return;
+    const fullPath = points.map(p => ({ lat: p[0], lng: p[1] }));
+
     const line = new window.google.maps.Polyline({
-      path: points.map(p => ({ lat: p[0], lng: p[1] })),
+      path: animate ? [] : fullPath,
       strokeColor: color, strokeOpacity: 0.8, strokeWeight: 3, geodesic: true,
       icons: [{ icon: { path: window.google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 3, fillColor: color, fillOpacity: 0.9, strokeWeight: 1, strokeColor: "#fff" }, offset: "50%" }],
     });
     line.setMap(map);
+
+    if (animate) {
+      let step = 0;
+      const totalSteps = fullPath.length * 15;
+      const timer = setInterval(() => {
+        step++;
+        const progress = step / totalSteps;
+        const pointIdx = Math.min(Math.floor(progress * (fullPath.length - 1)), fullPath.length - 2);
+        const segProgress = (progress * (fullPath.length - 1)) - pointIdx;
+        const path = fullPath.slice(0, pointIdx + 1);
+        if (pointIdx < fullPath.length - 1) {
+          const from = fullPath[pointIdx];
+          const to = fullPath[pointIdx + 1];
+          path.push({ lat: from.lat + (to.lat - from.lat) * segProgress, lng: from.lng + (to.lng - from.lng) * segProgress });
+        }
+        line.setPath(path);
+        if (step >= totalSteps) { line.setPath(fullPath); clearInterval(timer); }
+      }, 40);
+      return () => { clearInterval(timer); line.setMap(null); };
+    }
+
     return () => line.setMap(null);
-  }, [map, points, color]);
+  }, [map, points, color, animate]);
   return null;
 }
 
@@ -38,7 +61,7 @@ function AutoBounds({ points, searchPos }) {
   return null;
 }
 
-function MapMarkers({ visibleDays, searchResult, onSelect, selectedId }) {
+function MapMarkers({ visibleDays, searchResult, onSelect, selectedId, selectedDay }) {
   const allPoints = visibleDays.flatMap(d => d.items.map(it => [it.lat, it.lng]));
   const searchPos = searchResult ? [searchResult.lat, searchResult.lng] : null;
 
@@ -46,7 +69,7 @@ function MapMarkers({ visibleDays, searchResult, onSelect, selectedId }) {
     <>
       <AutoBounds points={allPoints} searchPos={searchPos} />
       {visibleDays.map(({ di, color, items }) =>
-        items.length > 1 ? <RouteLine key={`r-${di}`} points={items.map(it => [it.lat, it.lng])} color={color} /> : null
+        items.length > 1 ? <RouteLine key={`r-${di}-${selectedDay}`} points={items.map(it => [it.lat, it.lng])} color={color} animate={selectedDay !== -1} /> : null
       )}
       {searchResult && (
         <AdvancedMarker position={{ lat: searchResult.lat, lng: searchResult.lng }} onClick={() => onSelect({ type: "search" })}>
@@ -148,7 +171,7 @@ export default function MapTab({ trip, updateTrip }) {
             zoomControl={true}
             onClick={() => setSelected(null)}
           >
-            <MapMarkers visibleDays={visibleDays} searchResult={searchResult} onSelect={setSelected} selectedId={selected?.id} />
+            <MapMarkers visibleDays={visibleDays} searchResult={searchResult} onSelect={setSelected} selectedId={selected?.id} selectedDay={selectedDay} />
           </Map>
         </APIProvider>
 

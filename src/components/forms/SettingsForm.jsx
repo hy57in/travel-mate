@@ -2,7 +2,7 @@ import { useState } from "react";
 import { S, T } from "../../tokens";
 import { pill, inputStyle, btnPrimary } from "../../styles";
 
-export default function SettingsForm({ trip, theme, setTheme, onSave, onReset }) {
+export default function SettingsForm({ trip, theme, setTheme, user, onSave, onReset, onSignOut }) {
   const [name, setName] = useState(trip.name);
   const [emoji, setEmoji] = useState(trip.emoji);
   const [dates, setDates] = useState(trip.dates);
@@ -50,6 +50,13 @@ export default function SettingsForm({ trip, theme, setTheme, onSave, onReset })
         </div>
       )}
       <button style={btnPrimary} onClick={() => onSave({ name, emoji, dates, startDate: sd, travelers: Number(trav), travelerNames: names.split(",").map(n => n.trim()).filter(Boolean), rate: Number(rate) })}>저장</button>
+      {(user || onReset) && <div style={{ height: 1, background: T.divider, marginTop: S.sm }} />}
+      {user && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: S.sm }}>
+          <span style={{ fontSize: 11, color: T.textSoft }}>{user.email}</span>
+          {onSignOut && <button style={{ background: "none", border: "none", fontSize: 12, color: T.coral, cursor: "pointer", fontWeight: 600 }} onClick={onSignOut}>로그아웃</button>}
+        </div>
+      )}
       {onReset && (
         <button style={{ background: "none", border: "none", fontSize: 12, color: T.textMuted, cursor: "pointer", marginTop: S.sm, textAlign: "center", width: "100%" }} onClick={onReset}>
           ↺ 모든 데이터 초기화

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -36,6 +36,13 @@ function SortableItem({ id, di, ii, item, isNext, setDialog }) {
 
 export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDayItems, reorderItems, addDay, deleteDay, updateDay, todayDayIndex, weather, setDialog }) {
   const [editingDay, setEditingDay] = useState(null);
+  const todayRef = useRef(null);
+
+  useEffect(() => {
+    if (todayDayIndex >= 0 && todayRef.current) {
+      todayRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [todayDayIndex]);
 
   // 오늘 Day의 "다음 일정" 인덱스 계산
   const nextItemIdx = (() => {
@@ -69,7 +76,7 @@ export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDa
         const open = expandedDay === di;
         const isEditing = editingDay === di;
         return (
-          <div key={di} style={{ ...glass, overflow: "hidden", transition: "all 0.2s" }}>
+          <div key={di} ref={todayDayIndex === di ? todayRef : null} style={{ ...glass, overflow: "hidden", transition: "all 0.2s" }}>
             <button onClick={() => setExpandedDay(open ? -1 : di)} style={{ width: "100%", textAlign: "left", padding: `${S.lg}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.md, border: "none", background: "transparent", cursor: "pointer" }}>
               <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, minWidth: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
                 <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, letterSpacing: 0.5 }}>DAY</span>

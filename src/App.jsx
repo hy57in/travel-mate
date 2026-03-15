@@ -22,6 +22,7 @@ import SettingsForm from "./components/forms/SettingsForm";
 import AITripForm from "./components/forms/AITripForm";
 import LoginForm from "./components/forms/LoginForm";
 import Toast, { useToast } from "./components/ui/Toast";
+import TripRecap from "./components/ui/TripRecap";
 
 export default function App() {
   const { user, loading: authLoading, signInWithEmail, signInWithGoogle, signOut, isOnline } = useAuth();
@@ -139,12 +140,28 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ ...glass, padding: scrolled ? `${S.sm}px ${S.lg}px` : `${S.lg}px ${S.xl}px`, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: S.sm, transition: "all 0.25s ease" }}>
-          <div>
-            <div style={{ fontSize: scrolled ? 14 : 20, fontWeight: 700, color: T.text, transition: "font-size 0.25s ease" }}>{trip.emoji} {trip.name}</div>
-            {!scrolled && <div style={{ fontSize: 12, color: T.textSoft, marginTop: S.xs }}>{trip.dates} · {trip.travelers}인 · ¥1=₩{trip.rate}</div>}
+        <div style={{ ...glass, padding: scrolled ? `${S.sm}px ${S.lg}px` : `${S.lg}px ${S.xl}px`, marginTop: S.sm, transition: "all 0.25s ease" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ fontSize: scrolled ? 14 : 20, fontWeight: 700, color: T.text, transition: "font-size 0.25s ease" }}>{trip.emoji} {trip.name}</div>
+              {!scrolled && <div style={{ fontSize: 12, color: T.textSoft, marginTop: S.xs }}>{trip.dates} · {trip.travelers}인 · ¥1=₩{trip.rate}</div>}
+            </div>
+            {ddayText ? <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, padding: scrolled ? `${S.xs}px ${S.md}px` : `${S.sm}px ${S.lg}px`, fontSize: scrolled ? 12 : 16, fontWeight: 700, letterSpacing: -0.5, transition: "all 0.25s ease" }}>{ddayText}</div> : null}
           </div>
-          {ddayText ? <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, padding: scrolled ? `${S.xs}px ${S.md}px` : `${S.sm}px ${S.lg}px`, fontSize: scrolled ? 12 : 16, fontWeight: 700, letterSpacing: -0.5, transition: "all 0.25s ease" }}>{ddayText}</div> : null}
+          {!scrolled && todayDayIndex >= 0 && trip.days[todayDayIndex]?.items.length > 0 && (() => {
+            const now = new Date();
+            const nowMin = now.getHours() * 60 + now.getMinutes();
+            const nextItem = trip.days[todayDayIndex].items.find(it => {
+              const m = it.time.match(/(\d{1,2}):(\d{2})/);
+              return m && parseInt(m[1]) * 60 + parseInt(m[2]) >= nowMin;
+            });
+            return nextItem ? (
+              <div style={{ marginTop: S.sm, padding: `${S.sm}px ${S.md}px`, borderRadius: T.rSm, background: T.mintLight, display: "flex", alignItems: "center", gap: S.sm }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: T.mint }}>다음</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: T.text }}>{nextItem.time} {nextItem.text}</span>
+              </div>
+            ) : null;
+          })()}
         </div>
 
       </div>
@@ -206,7 +223,12 @@ export default function App() {
           />
         )}
         {tab === "map" && <MapTab trip={trip} updateTrip={updateTrip} />}
-        {tab === "memo" && <MemoTab trip={trip} updateTrip={updateTrip} />}
+        {tab === "memo" && (
+          <>
+            <MemoTab trip={trip} updateTrip={updateTrip} />
+            <div style={{ marginTop: S.lg }}><TripRecap trip={trip} budgetSummary={budgetSummary} checklistSummary={checklistSummary} /></div>
+          </>
+        )}
       </div>
 
       {/* Toast */}

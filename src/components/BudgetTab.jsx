@@ -3,6 +3,7 @@ import { glass, pill, btnOutline } from "../styles";
 import Donut from "./ui/Donut";
 import Empty from "./ui/Empty";
 import ExpInline from "./forms/ExpInline";
+import BarChart from "./ui/BarChart";
 
 export default function BudgetTab({
   trip, expenseFilter, setExpenseFilter, filteredExpenses, confirmedAmount, estimatedAmount, total, perPerson,
@@ -39,6 +40,14 @@ export default function BudgetTab({
           return <span key={c} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: ct.bg, color: ct.color, border: `1px solid ${ct.color}22`, whiteSpace: "nowrap" }}>{ct.emoji} {c} {pct}%</span>;
         })}
       </div>
+
+      {/* Day별 경비 차트 */}
+      {trip.days.length > 0 && trip.expenses.length > 0 && (
+        <div style={{ ...glass, padding: S.lg }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: S.sm }}>📊 Day별 경비</div>
+          <BarChart days={trip.days} expenses={trip.expenses} />
+        </div>
+      )}
 
       {/* Day별 소계 */}
       {trip.days.length > 0 && (() => {

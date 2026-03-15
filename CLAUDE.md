@@ -12,7 +12,7 @@
 - **폰트**: Outfit (Google Fonts) + Pretendard (한글, CDN)
 - **아이콘**: 이모지 (외부 아이콘 라이브러리 미사용)
 - **패키지 매니저**: pnpm
-- **배포**: Vercel
+- **배포**: Cloudflare Pages
 
 ## 아키텍처
 

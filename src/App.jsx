@@ -19,10 +19,11 @@ import AddChkForm from "./components/forms/AddChkForm";
 import AddTripForm from "./components/forms/AddTripForm";
 import SettingsForm from "./components/forms/SettingsForm";
 import AITripForm from "./components/forms/AITripForm";
+import LoginForm from "./components/forms/LoginForm";
 import Toast, { useToast } from "./components/ui/Toast";
 
 export default function App() {
-  const { user, loading: authLoading, signInWithGoogle, signOut, isOnline } = useAuth();
+  const { user, loading: authLoading, signInWithEmail, signOut, isOnline } = useAuth();
   const {
     trips, activeId, setActiveId, loading, trip,
     persist, updateTrip, reset, nextId,
@@ -130,8 +131,8 @@ export default function App() {
             <button style={{ ...pill(false), border: `1.5px dashed ${T.textMuted}`, padding: "5px 10px" }} onClick={() => setDialog({ type: "trip" })}>＋</button>
           </div>
           <div style={{ display: "flex", gap: S.xs, flexShrink: 0, alignItems: "center" }}>
-            {isOnline && !user && <button style={{ background: "none", border: "none", fontSize: 11, cursor: "pointer", padding: `${S.xs}px ${S.sm}px`, color: T.mint, fontWeight: 700, borderRadius: 50, border: `1.5px solid ${T.mint}` }} onClick={signInWithGoogle}>로그인</button>}
-            {user && <span style={{ width: 24, height: 24, borderRadius: "50%", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }} title={user.email}>{user.email?.[0]?.toUpperCase()}</span>}
+            {isOnline && !user && <button style={{ background: "none", border: "none", fontSize: 11, cursor: "pointer", padding: `${S.xs}px ${S.sm}px`, color: T.mint, fontWeight: 700, borderRadius: 50, border: `1.5px solid ${T.mint}` }} onClick={() => setDialog({ type: "login" })}>로그인</button>}
+            {user && <button style={{ width: 24, height: 24, borderRadius: "50%", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }} title={user.email} onClick={signOut}>{user.email?.[0]?.toUpperCase()}</button>}
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => { navigator.clipboard.writeText(shareTrip()); showToast("일정이 복사되었습니다"); }}>📋</button>
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => setTheme(theme === "dark" ? "light" : theme === "light" ? "dark" : "dark")}>{theme === "dark" ? "☀️" : "🌙"}</button>
             <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", padding: S.xs }} onClick={() => setDialog({ type: "settings" })}>⚙️</button>
@@ -299,6 +300,17 @@ export default function App() {
                   persist([...trips, newTrip], newTrip.id);
                   setDialog(null);
                   showToast("AI 일정이 생성되었습니다");
+                }} />
+              </>
+            )}
+            {dialog?.type === "login" && (
+              <>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>🔐 로그인</Dialog.Title></div>
+                <LoginForm onLogin={async (email) => {
+                  const { error } = await signInWithEmail(email);
+                  if (error) { showToast(error); return; }
+                  showToast("이메일을 확인해 주세요!");
+                  setDialog(null);
                 }} />
               </>
             )}

@@ -36,7 +36,7 @@ export default function BudgetTab({
         {Object.entries(categoryTotals).map(([c, a]) => {
           const ct = CAT[c] || CAT["기타"];
           const pct = total > 0 ? Math.round((a / total) * 100) : 0;
-          return <span key={c} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: ct.bg, color: ct.color, whiteSpace: "nowrap" }}>{ct.emoji} {c} {pct}%</span>;
+          return <span key={c} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: ct.bg, color: ct.color, border: `1px solid ${ct.color}22`, whiteSpace: "nowrap" }}>{ct.emoji} {c} {pct}%</span>;
         })}
       </div>
 
@@ -128,22 +128,23 @@ export default function BudgetTab({
             );
           }
           return (
-            <div key={e.id} style={{ ...glass, padding: `${S.md}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, borderLeft: `4px solid ${ct.color}`, cursor: "pointer" }} onClick={() => setEditingExpenseId(e.id)}>
-              <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); updateTrip({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ok: !x.ok } : x) }); }}>
+            <div key={e.id} style={{ ...glass, padding: `${S.sm}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, borderLeft: `3px solid ${ct.color}`, cursor: "pointer", transition: "background 0.15s" }} onClick={() => setEditingExpenseId(e.id)}>
+              <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", flexShrink: 0, padding: 0 }} onClick={ev => { ev.stopPropagation(); updateTrip({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ok: !x.ok } : x) }); }}>
                 {e.ok ? "✅" : "⭕"}
               </button>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: S.sm }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: ct.bg, color: ct.color, flexShrink: 0 }}>{ct.emoji} {e.cat}</span>
-                  {e.day != null && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: T.coralLight, color: T.coral, flexShrink: 0 }}>D{e.day + 1}</span>}
+                <div style={{ display: "flex", alignItems: "center", gap: S.xs }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: S.xs, marginTop: 2 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 6px", borderRadius: 6, background: ct.bg, color: ct.color, border: `1px solid ${ct.color}22`, flexShrink: 0 }}>{ct.emoji} {e.cat}</span>
+                  {e.day != null && <span style={{ fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 6, background: T.coralLight, color: T.coral, flexShrink: 0 }}>D{e.day + 1}</span>}
                 </div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>₩{fmt(e.amt)}</div>
-                <div style={{ fontSize: 10, color: T.textMuted }}>¥{fmt(toY(e.amt, trip.rate))}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: T.text }}>₩{fmt(e.amt)}</div>
+                <div style={{ fontSize: 9, color: T.textMuted }}>¥{fmt(toY(e.amt, trip.rate))}</div>
               </div>
-              <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted, flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); setConfirmDelete({ msg: `"${e.name}" 삭제?`, onOk: () => updateTrip({ expenses: trip.expenses.filter(x => x.id !== e.id) }) }); }}>🗑</button>
             </div>
           );
         })}

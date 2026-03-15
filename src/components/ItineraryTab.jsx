@@ -34,7 +34,7 @@ function SortableItem({ id, di, ii, item, isNext, setDialog }) {
   );
 }
 
-export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDayItemsItems, reorderItems, addDay, deleteDay, updateDay, todayDayIndex, setDialog }) {
+export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDayItems, reorderItems, addDay, deleteDay, updateDay, todayDayIndex, weather, setDialog }) {
   const [editingDay, setEditingDay] = useState(null);
 
   // 오늘 Day의 "다음 일정" 인덱스 계산
@@ -80,7 +80,10 @@ export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDa
                   <span style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{day.title}</span>
                   {todayDayIndex === di && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 8px", borderRadius: 50, background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", flexShrink: 0 }}>오늘</span>}
                 </div>
-                <div style={{ fontSize: 11, color: T.textSoft, marginTop: S.xs }}>{day.date}</div>
+                <div style={{ fontSize: 11, color: T.textSoft, marginTop: S.xs }}>
+                  {day.date}
+                  {(() => { const w = weather?.find(f => { const sd = new Date(trip.startDate); sd.setDate(sd.getDate() + di); return f.date === sd.toISOString().slice(0, 10); }); return w ? <span style={{ marginLeft: S.sm }}>{w.icon} {w.minC}~{w.maxC}°C</span> : null; })()}
+                </div>
               </div>
               <span style={{ fontSize: 18, color: T.textMuted, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0)" }}>▾</span>
             </button>

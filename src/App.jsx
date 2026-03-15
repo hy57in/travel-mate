@@ -7,6 +7,7 @@ import useTrips from "./hooks/useTrips";
 import useTheme from "./hooks/useTheme";
 import useWeather from "./hooks/useWeather";
 import useAuth from "./hooks/useAuth";
+import useInvite from "./hooks/useInvite";
 
 import ItineraryTab from "./components/ItineraryTab";
 import BudgetTab from "./components/BudgetTab";
@@ -26,6 +27,7 @@ import TripRecap from "./components/ui/TripRecap";
 
 export default function App() {
   const { user, loading: authLoading, signInWithEmail, signInWithGoogle, signOut, isOnline } = useAuth();
+  const { createInvite } = useInvite(user);
   const {
     trips, activeId, setActiveId, loading, trip,
     persist, updateTrip, reset, nextId,
@@ -312,9 +314,18 @@ export default function App() {
                   {trips.map((t) => (
                     <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 600 }}>
                       <span>{t.emoji} {t.name}</span>
-                      {trips.length > 1 && (
-                        <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14 }} onClick={() => { const remaining = trips.filter((x) => x.id !== t.id); persist(remaining, t.id === activeId ? remaining[0].id : activeId); }}>🗑</button>
-                      )}
+                      <div style={{ display: "flex", gap: S.xs }}>
+                        {user && (
+                          <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13 }} onClick={async () => {
+                            const url = await createInvite(t.id);
+                            if (url) { navigator.clipboard.writeText(url); showToast("초대 링크가 복사되었습니다"); }
+                            else showToast("초대 링크 생성 실패");
+                          }}>🔗</button>
+                        )}
+                        {trips.length > 1 && (
+                          <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14 }} onClick={() => { const remaining = trips.filter((x) => x.id !== t.id); persist(remaining, t.id === activeId ? remaining[0].id : activeId); }}>🗑</button>
+                        )}
+                      </div>
                     </div>
                   ))}
                   <div style={{ height: 1, background: T.divider }} />

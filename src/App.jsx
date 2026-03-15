@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { S, T, THEME_LIGHT, THEME_DARK } from "./tokens";
 import { glass, pill, btnPrimary, btnOutline } from "./styles";
 
 import useTrips from "./hooks/useTrips";
 import useTheme from "./hooks/useTheme";
+import useWeather from "./hooks/useWeather";
 
 import ItineraryTab from "./components/ItineraryTab";
 import BudgetTab from "./components/BudgetTab";
@@ -26,6 +27,7 @@ export default function App() {
     budgetSummary, checklistSummary, todayDayIndex, ddayText, shareTrip, exportCSV,
   } = useTrips();
   const { theme, setTheme } = useTheme();
+  const weather = useWeather(trip?.startDate, trip?.days);
   const { toast, show: showToast } = useToast();
 
   const [expandedDay, setExpandedDay] = useState(0);
@@ -37,6 +39,16 @@ export default function App() {
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [editingExpenseId, setEditingExpenseId] = useState(null);
   const [editingCheckId, setEditingCheckId] = useState(null);
+  const [scrolled, setScrolled] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handler = () => setScrolled(el.scrollTop > 80);
+    el.addEventListener("scroll", handler, { passive: true });
+    return () => el.removeEventListener("scroll", handler);
+  }, []);
 
   // 여행 전환 또는 최초 로드 시 오늘 Day 자동 펼치기
   useEffect(() => {
@@ -77,7 +89,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: `linear-gradient(180deg, ${T.peach} 0%, ${T.cream} 30%, ${T.sand} 100%)`, fontFamily: "'Outfit', 'Pretendard', -apple-system, sans-serif", paddingBottom: 100, position: "relative" }}>
+    <div ref={containerRef} style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", height: "100vh", overflowY: "auto", background: `linear-gradient(180deg, ${T.peach} 0%, ${T.cream} 30%, ${T.sand} 100%)`, fontFamily: "'Outfit', 'Pretendard', -apple-system, sans-serif", paddingBottom: 100, position: "relative" }}>
       <style>{`
         :root { ${THEME_LIGHT} }
         :root[data-theme="dark"] { ${THEME_DARK} }
@@ -119,12 +131,12 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ ...glass, padding: `${S.lg}px ${S.xl}px`, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: S.sm }}>
+        <div style={{ ...glass, padding: scrolled ? `${S.sm}px ${S.lg}px` : `${S.lg}px ${S.xl}px`, display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: S.sm, transition: "all 0.25s ease" }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700, color: T.text }}>{trip.emoji} {trip.name}</div>
-            <div style={{ fontSize: 12, color: T.textSoft, marginTop: S.xs }}>{trip.dates} · {trip.travelers}인 · ¥1=₩{trip.rate}</div>
+            <div style={{ fontSize: scrolled ? 14 : 20, fontWeight: 700, color: T.text, transition: "font-size 0.25s ease" }}>{trip.emoji} {trip.name}</div>
+            {!scrolled && <div style={{ fontSize: 12, color: T.textSoft, marginTop: S.xs }}>{trip.dates} · {trip.travelers}인 · ¥1=₩{trip.rate}</div>}
           </div>
-          {ddayText ? <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, padding: `${S.sm}px ${S.lg}px`, fontSize: 16, fontWeight: 700, letterSpacing: -0.5 }}>{ddayText}</div> : null}
+          {ddayText ? <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, padding: scrolled ? `${S.xs}px ${S.md}px` : `${S.sm}px ${S.lg}px`, fontSize: scrolled ? 12 : 16, fontWeight: 700, letterSpacing: -0.5, transition: "all 0.25s ease" }}>{ddayText}</div> : null}
         </div>
       </div>
 
@@ -152,7 +164,7 @@ export default function App() {
             trip={trip} expandedDay={expandedDay} setExpandedDay={setExpandedDay}
             sortDayItems={sortDayItems} reorderItems={reorderItems}
             addDay={handleAddDay} deleteDay={handleDeleteDay} updateDay={updateDay}
-            todayDayIndex={todayDayIndex} setDialog={setDialog}
+            todayDayIndex={todayDayIndex} weather={weather} setDialog={setDialog}
           />
         )}
         {tab === "budget" && (

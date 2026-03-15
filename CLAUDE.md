@@ -5,13 +5,55 @@
 향후 다른 여행에도 동일 포맷으로 재사용 가능한 범용 구조.
 
 ## 기술 스택
-- **프레임워크**: React (JSX, 단일 파일)
-- **원래 환경**: Claude 아티팩트 (.jsx) — shadcn/ui, Tailwind 내장
-- **스토리지**: `window.storage` API (아티팩트 전용 persistent storage)
-- **스타일링**: 인라인 스타일 (CSS-in-JS 방식, 디자인 토큰 기반)
+- **빌드**: Vite 8 + React 19
+- **UI 라이브러리**: @radix-ui/react-dialog, @dnd-kit (드래그앤드롭)
+- **스토리지**: localStorage (`tp-v6` 키)
+- **스타일링**: 인라인 스타일 (CSS Custom Properties 기반 디자인 토큰)
 - **폰트**: Outfit (Google Fonts) + Pretendard (한글, CDN)
-- **아이콘**: 이모지 사용 (lucide-react 미사용 — 아티팩트 환경 로드 실패)
-- **외부 라이브러리**: 없음 (순수 React + shadcn/ui Dialog, Switch)
+- **아이콘**: 이모지 (외부 아이콘 라이브러리 미사용)
+- **패키지 매니저**: pnpm
+- **배포**: Vercel
+
+## 아키텍처
+
+### 파일 구조
+```
+src/
+├── App.jsx              # 메인 앱 (라우팅, 다이얼로그, 레이아웃)
+├── tokens.js            # 디자인 토큰 (S, T, CAT, THEME_LIGHT/DARK)
+├── styles.js            # 공통 스타일 (glass, pill, inputStyle, btnPrimary)
+├── storage.js           # localStorage 래퍼
+├── data/
+│   └── defaults.js      # 기본 여행 데이터
+├── hooks/
+│   ├── useTrips.js      # 여행 CRUD, Day 조작, 예산/체크리스트 집계
+│   ├── useTheme.js      # 다크모드 (auto/light/dark)
+│   └── useWeather.js    # 날씨 예보 (wttr.in API, 1시간 캐시)
+└── components/
+    ├── ItineraryTab.jsx  # 일정 탭 (DnD, Day 관리, 날씨)
+    ├── BudgetTab.jsx     # 경비 탭 (도넛, 정산, Day 소계)
+    ├── ChecklistTab.jsx  # 체크리스트 탭 (DnD, 템플릿)
+    ├── MemoTab.jsx       # 메모 탭
+    ├── forms/
+    │   ├── ItemForm.jsx     # 일정 추가/수정 폼
+    │   ├── AddExpForm.jsx   # 경비 추가 폼
+    │   ├── ExpInline.jsx    # 경비 인라인 편집
+    │   ├── QuickExp.jsx     # FAB 빠른 지출 입력
+    │   ├── AddChkForm.jsx   # 체크리스트 추가 폼
+    │   ├── ChkInline.jsx    # 체크리스트 인라인 편집
+    │   ├── AddTripForm.jsx  # 새 여행 추가 폼
+    │   └── SettingsForm.jsx # 여행 설정 (이름, 인원, 환율, 동행자, 테마, 초기화)
+    └── ui/
+        ├── Donut.jsx        # SVG 도넛 차트
+        ├── Empty.jsx        # 빈 상태 + CTA 버튼
+        ├── Toast.jsx        # Toast 알림 시스템
+        └── ToggleSwitch.jsx # 토글 스위치
+```
+
+### Custom Hooks
+- **useTrips**: 전체 비즈니스 로직 (CRUD, Day ops, useMemo 집계, CSV/공유 export)
+- **useTheme**: CSS Custom Properties 기반 테마 전환
+- **useWeather**: wttr.in API → Day 헤더에 날씨 이모지 + 온도 표시
 
 ## 디자인 시스템
 
@@ -20,96 +62,98 @@
 const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
 ```
 
-### 컬러 팔레트 (따뜻한 코랄/앰버 베이스)
+### 컬러 (CSS Custom Properties)
 ```
-코랄: #E07460 (포인트)     코랄라이트: #FDE8E4
-인디고: #2D3561 (2차)     인디고라이트: #E8EAF6
-민트: #3EBCB4 (식비)      민트라이트: #E0F5F3
-앰버: #E89B52 (숙소)      앰버라이트: #FFF2E0
-바이올렛: #7056E0 (활동)   바이올렛라이트: #EDE7FF
-배경: peach → cream → sand 그라디언트
+코랄: var(--c-coral)        코랄라이트: var(--c-coral-lt)
+인디고: var(--c-indigo)     민트: var(--c-mint)
+앰버: var(--c-amber)        바이올렛: var(--c-violet)
 ```
+- 라이트/다크 값은 `tokens.js`의 `THEME_LIGHT` / `THEME_DARK`에 정의
+- `T.text`, `T.textSoft`, `T.textMuted` 3단계 텍스트 계층
 
-### 카테고리 컬러 매핑
-```
-교통: indigo (#2D3561)  🚃
-숙소: amber (#E89B52)   🏨
-식비: mint (#3EBCB4)    🍽️
-활동: violet (#7056E0)  ⭐
-기타: textSoft (#636A78) 📦
-```
+### 카테고리 컬러
+교통(indigo), 숙소(amber), 식비(mint), 활동(violet), 기타(textSoft)
 
 ### 스타일 특성
-- 글래스모피즘: blur(12px) + rgba(255,255,255,0.82) + 미세한 보더
+- 글래스모피즘: blur(12px) + rgba + 미세한 보더
 - border-radius: 14px (카드), 10px (버튼/인풋), 50px (pill)
-- FAB: 코랄→앰버 그라디언트 원형, pulse 애니메이션
-- 전체적으로 귀엽고 따뜻한 분위기 유지
+- 다크모드: `color-scheme: dark` for native inputs
 
 ## 구현된 기능
 
 ### 📅 일정 탭
-- Day별 아코디언 카드 (DAY 배지 + 제목 + 날짜)
-- 타임라인 아이템: 이모지 배지(34px), 핵심/스킵/미정 상태, 좌측 accent bar
-- 아이템 탭 → 수정 다이얼로그 (시간, 내용, 타입, 핵심/스킵/미정 Switch)
-- 아이템 추가/삭제
-- **드래그앤드롭 순서 변경** (⠿ 핸들, @dnd-kit, 터치/마우스 지원)
-- **시간순 정렬 버튼** (각 Day 하단)
-- **Day 추가** (하단 ＋ Day 추가 버튼, startDate 기준 날짜 자동 계산)
-- **Day 삭제** (아코디언 내 🗑 버튼, 확인 다이얼로그)
-- **Day 제목·날짜 인라인 편집** (아코디언 내 ✏️ 버튼)
-- Day별 메모 표시
-- **오늘의 일정**: 여행 중 해당 Day 자동 펼치기, "오늘" 배지, 다음 일정 민트 하이라이트
+- Day별 아코디언 카드 (DAY 배지 + 제목 + 날짜 + 날씨)
+- 타임라인 아이템: 이모지 배지, 핵심/스킵/미정 상태, 좌측 accent bar
+- 드래그앤드롭 순서 변경 (⠿ 핸들, @dnd-kit, PointerSensor 5px + TouchSensor 200ms)
+- 시간순 정렬 버튼
+- Day 추가/삭제/제목·날짜 인라인 편집
+- 장소 URL 필드 (📍 링크)
+- 오늘의 일정: 자동 펼치기, "오늘" 배지, 다음 일정 민트 하이라이트
+- 날씨 예보: wttr.in API, Day 헤더에 이모지 + 온도 (5일 이내)
+- Empty state CTA ("＋ Day 추가" 버튼)
 
 ### 💰 경비 탭
-- 인디고 그라디언트 서머리 카드 + 도넛 차트
+- 인디고 서머리 카드 + SVG 도넛 차트
 - 확정/예상 구분, 1인당 자동 계산
-- 카테고리별 컬러 legend
-- 필터 (전체/교통/숙소/식비/활동/기타)
-- 아이템 탭 → 인라인 편집 (이름, 금액, 카테고리)
-- ₩↔¥ 통화 토글 (환율 자동 환산)
-- 확정 토글 (✅/⭕)
-- 삭제 (확인 다이얼로그)
+- 카테고리 필터 + 컬러 legend
+- 인라인 편집 (이름, 금액, 카테고리, Day, 결제자)
+- ₩↔¥ 통화 토글
+- Day 태깅 + Day별 소계 카드
+- 경비 정산: 결제자(paidBy) 기록 → 자동 정산 결과 ("A → B에게 ₩X 보내기")
+- FAB (₩ 버튼): 경비 탭에서만 표시, 빠른 지출 입력
 - CSV 다운로드
-- **Day 태깅**: 경비에 Day 태그 (D1, D2...) 지정 가능, 공통(미배정) 지원
-- **Day별 소계**: 카테고리 legend 아래에 Day별 경비 요약 카드
-- **FAB (₩ 버튼)**: 하단 중앙, 빠른 지출 입력, 엔화 기본, 실시간 환산
+- Empty state CTA
 
 ### ✅ 체크리스트 탭
-- 진행률 프로그레스 바 (코랄→앰버 그라디언트)
-- 카테고리 필터 (전체/예약/서류/준비/짐싸기)
-- 아이템 탭 → 인라인 편집, 추가/삭제
+- 진행률 프로그레스 바
+- 카테고리 필터
+- 드래그앤드롭 순서 변경 (필터 적용 시에도 정상 동작)
+- 인라인 편집, 추가/삭제
+- 짐싸기 템플릿: 🧳 버튼으로 일본여행 기본 12개 아이템 원클릭 추가 (중복 방지)
+- 체크 애니메이션 (check-pop)
+- Empty state CTA
 
 ### 📝 메모 탭
 - 전체 여행 메모 (textarea)
 - Day별 메모
 
 ### ⚙️ 설정 & 여행 관리
-- 설정: 이름, 이모지, 기간, 출발일(D-Day), 인원, 환율
-- D-Day 카운트다운 배지 (헤더)
+- 여행 이름, 이모지, 기간, 출발일(D-Day), 인원, 환율
+- 동행자 이름 설정 (쉼표 구분 → 경비 정산에 사용)
+- 테마 전환 (자동/라이트/다크)
 - 여행 추가/삭제/전환
-- 초기화(↺) 버튼
+- 초기화: 설정 하단으로 이동, 2단계 확인 다이얼로그
+
+### 🎨 UX/UI
+- **다크 모드**: CSS Custom Properties, 라이트/다크/자동, 헤더 🌙/☀️ 토글
+- **Compact header**: 스크롤 시 trip info 카드 축소 (이름 + D-Day만)
+- **Sticky tab bar**: 스크롤해도 탭 고정, blur backdrop
+- **Toast 알림**: 추가/수정/삭제 시 2초간 피드백
+- **Dialog X 닫기**: 모든 다이얼로그 우상단 ✕ 버튼
+- **Dialog scale-in**: 열릴 때 애니메이션
+- **여행 공유**: 헤더 📋 → 일정 텍스트 클립보드 복사
+- **D-Day 카운트다운**: 헤더 배지 (D-11, D-Day!, 여행 3일차)
+- **Button press feedback**: active 시 scale(0.97)
+- **Input focus glow**: coral box-shadow
+- **Smooth scroll + overscroll containment**
+- **Empty state CTA**: 빈 화면에 추가 안내 버튼
 
 ## 스토리지
-- 키: `tp-v6`
-- 포맷: `{ trips: [...], aid: "현재선택ID" }`
+- 여행 데이터: `tp-v6` → `{ trips: [...], aid: "현재선택ID" }`
+- 테마: `tp-theme` → `"auto" | "light" | "dark"`
+- 날씨 캐시: `tp-weather` → `{ data: [...], ts: timestamp }` (1시간 TTL)
 
 ## 코드 컨벤션
-- 간격은 반드시 S 토큰 사용 (S.xs, S.sm, S.md, S.lg, S.xl, S.xxl)
-- 하드코딩된 px 값 사용 금지
-- pill/chip row에 `overflow: hidden` + `whiteSpace: nowrap` + `flexShrink: 0` 적용 (줄바꿈 방지)
-- 모든 label에 `display: "block", marginBottom: S.xs` 통일
-- 컴포넌트 내 폼 gap은 S.md (12px), 아이템 간 gap은 S.sm (8px) 통일
-
-## 구현 완료
-- 일정 항목에 장소 URL 필드
-- Day 추가/삭제/편집
-- 경비에 Day 태깅 + Day별 소계
-- 체크리스트 드래그 정렬 (@dnd-kit)
-- 다크 모드 (CSS Custom Properties, 라이트/다크/자동 전환)
-- 일정/체크리스트 아이템 드래그앤드롭 순서 변경
-- custom hooks 분리 (useTrips, useTheme)
-- 의미 있는 prop 이름으로 리팩토링
+- 간격은 반드시 S 토큰 사용 (S.xs ~ S.xxl)
+- 컬러는 반드시 T 토큰 사용 (CSS Custom Properties)
+- 하드코딩된 px/color 값 사용 금지
+- pill/chip row: `overflow: hidden` + `whiteSpace: nowrap` + `flexShrink: 0`
+- 모든 label: `display: "block", marginBottom: S.xs`
+- 폼 gap: S.md (12px), 아이템 gap: S.sm (8px)
+- 조건부 렌더링: 삼항 연산자 `? :` 사용 (`&&` 지양)
+- useMemo: 파생 값 계산 (budgetSummary, checklistSummary 등)
+- 단일 패스 반복: 경비 집계 시 한 번의 루프로 모든 값 계산
 
 ## Research & Plans
-- `.claude/research/travel-services-analysis.md` — 경쟁 서비스 분석 (Wanderlog, TripIt, 트리플 등), 기능 갭 분석, 구현 우선순위
-- `.claude/research/ux-audit-and-improvement-plan.md` — UX 감사 결과, P0-P2 이슈 목록, 스프린트 계획, 디자인 원칙
+- `.claude/research/travel-services-analysis.md` — 경쟁 서비스 분석, 기능 갭 분석, 구현 우선순위
+- `.claude/research/ux-audit-and-improvement-plan.md` — UX 감사, P0-P2 이슈, 스프린트 계획, 디자인 원칙

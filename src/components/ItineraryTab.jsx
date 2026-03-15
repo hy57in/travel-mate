@@ -43,6 +43,9 @@ export default function ItineraryTab({ trip, exDay, setExDay, sortDay, moveItem,
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: item.pend ? T.amber : item.skip ? T.textMuted : T.text, textDecoration: item.skip ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.text}</div>
                         </div>
+                        {item.url && (
+                          <a href={item.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={{ fontSize: 16, textDecoration: "none", flexShrink: 0, lineHeight: 1 }}>📍</a>
+                        )}
                         <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{item.time}</span>
                       </div>
                     </div>

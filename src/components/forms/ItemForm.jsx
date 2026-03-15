@@ -7,6 +7,7 @@ export default function ItemForm({ item, onSave, onDelete }) {
   const [time, setTime] = useState(item?.time || "");
   const [text, setText] = useState(item?.text || "");
   const [type, setType] = useState(item?.type || "activity");
+  const [url, setUrl] = useState(item?.url || "");
   const [hl, setHl] = useState(item?.hl || false);
   const [skip, setSkip] = useState(item?.skip || false);
   const [pend, setPend] = useState(item?.pend || false);
@@ -23,6 +24,10 @@ export default function ItemForm({ item, onSave, onDelete }) {
           <input style={inputStyle} value={text} onChange={e => setText(e.target.value)} placeholder="장소/활동" />
         </div>
       </div>
+      <div>
+        <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>📍 장소 링크</label>
+        <input style={inputStyle} value={url} onChange={e => setUrl(e.target.value)} placeholder="구글맵 또는 장소 URL" />
+      </div>
       <div style={{ display: "flex", gap: S.xs, flexWrap: "wrap" }}>
         {TYPES.map(t => (
           <button key={t.v} style={{ ...pill(type === t.v), fontSize: 12, padding: "5px 10px" }} onClick={() => setType(t.v)}>
@@ -36,7 +41,7 @@ export default function ItemForm({ item, onSave, onDelete }) {
         <label style={{ display: "flex", alignItems: "center", gap: S.xs }}><ToggleSwitch checked={pend} onCheckedChange={setPend} />미정</label>
       </div>
       <div style={{ display: "flex", gap: S.sm }}>
-        <button style={{ ...btnPrimary, flex: 1 }} disabled={!time || !text} onClick={() => onSave({ time, text, type, hl, skip, pend })}>
+        <button style={{ ...btnPrimary, flex: 1 }} disabled={!time || !text} onClick={() => onSave({ time, text, type, url: url || undefined, hl, skip, pend })}>
           {item ? "수정" : "추가"}
         </button>
         {onDelete && <button style={{ ...btnOutline, color: "#EF4444", borderColor: "#FCA5A5" }} onClick={onDelete}>삭제</button>}

@@ -24,13 +24,19 @@ export default function Toast({ message }) {
   if (!message) return null;
   return (
     <div style={{
-      position: "fixed", bottom: 90, left: "50%", transform: "translateX(-50%)",
-      background: T.text, color: T.cardBg, padding: `${S.sm}px ${S.xl}px`,
-      borderRadius: 50, fontSize: 13, fontWeight: 600, zIndex: 2000,
-      boxShadow: T.shadowLg, animation: "fadeIn 0.2s ease-out",
-      pointerEvents: "none", whiteSpace: "nowrap",
+      position: "fixed", bottom: 90, left: 0, right: 0,
+      display: "flex", justifyContent: "center",
+      zIndex: 2000, pointerEvents: "none",
+      animation: "toastIn 0.25s ease-out",
     }}>
-      {message}
+      <style>{`@keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <div style={{
+        background: T.text, color: T.cardBg, padding: `${S.sm}px ${S.xl}px`,
+        borderRadius: 50, fontSize: 13, fontWeight: 600,
+        boxShadow: T.shadowLg, whiteSpace: "nowrap",
+      }}>
+        {message}
+      </div>
     </div>
   );
 }

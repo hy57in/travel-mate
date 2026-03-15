@@ -3,6 +3,13 @@ import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { S, T, CC } from "../tokens";
 import { glass, pill } from "../styles";
+
+const CHK_CAT_COLOR = {
+  "\uC608\uC57D": T.coral,
+  "\uC11C\uB958": T.indigo,
+  "\uC900\uBE44": T.mint,
+  "\uC9D0\uC2F8\uAE30": T.amber,
+};
 import Empty from "./ui/Empty";
 import ChkInline from "./forms/ChkInline";
 
@@ -34,8 +41,11 @@ function SortableCheckItem({ id, item, editingCheckId, setEditingCheckId, setCon
         {item.done ? "☑️" : "⬜"}
       </button>
       <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setEditingCheckId(item.id)}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: item.done ? T.textMuted : T.text, textDecoration: item.done ? "line-through" : "none" }}>{item.text}</span>
-        <span style={{ fontSize: 10, color: T.textMuted, marginLeft: S.sm, fontWeight: 600 }}>{item.cat}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: S.xs }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: CHK_CAT_COLOR[item.cat] || T.textMuted, flexShrink: 0, display: "inline-block" }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: item.done ? T.textMuted : T.text, textDecoration: item.done ? "line-through" : "none" }}>{item.text}</span>
+        </div>
+        <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 600, marginTop: 2 }}>{item.cat}</div>
       </div>
       <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted }} onClick={() => setConfirmDelete({ msg: `"${item.text}" 삭제?`, onOk: () => updateTrip({ checklist: trip.checklist.filter(x => x.id !== item.id) }) })}>🗑</button>
     </div>

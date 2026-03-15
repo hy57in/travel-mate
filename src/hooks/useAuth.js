@@ -29,11 +29,19 @@ export default function useAuth() {
     return { error: error?.message };
   }, []);
 
+  const signInWithGoogle = useCallback(async () => {
+    if (!supabase) return;
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+  }, []);
+
   const signOut = useCallback(async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
     setUser(null);
   }, []);
 
-  return { user, loading, signInWithEmail, signOut, isOnline: !!supabase };
+  return { user, loading, signInWithEmail, signInWithGoogle, signOut, isOnline: !!supabase };
 }

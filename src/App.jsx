@@ -23,7 +23,7 @@ import LoginForm from "./components/forms/LoginForm";
 import Toast, { useToast } from "./components/ui/Toast";
 
 export default function App() {
-  const { user, loading: authLoading, signInWithEmail, signOut, isOnline } = useAuth();
+  const { user, loading: authLoading, signInWithEmail, signInWithGoogle, signOut, isOnline } = useAuth();
   const {
     trips, activeId, setActiveId, loading, trip,
     persist, updateTrip, reset, nextId,
@@ -313,12 +313,15 @@ export default function App() {
             {dialog?.type === "login" && (
               <>
                 <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>🔐 로그인</Dialog.Title></div>
-                <LoginForm onLogin={async (email) => {
-                  const { error } = await signInWithEmail(email);
-                  if (error) { showToast(error); return; }
-                  showToast("이메일을 확인해 주세요!");
-                  setDialog(null);
-                }} />
+                <LoginForm
+                  onLogin={async (email) => {
+                    const { error } = await signInWithEmail(email);
+                    if (error) { showToast(error); return; }
+                    showToast("이메일을 확인해 주세요!");
+                    setDialog(null);
+                  }}
+                  onGoogle={() => { signInWithGoogle(); setDialog(null); }}
+                />
               </>
             )}
           </Dialog.Content>

@@ -3,7 +3,7 @@ import { S, T, EC, CAT, fmt, toY, toK } from "../../tokens";
 import { pill, inputStyle, btnPrimary } from "../../styles";
 import ToggleSwitch from "../ui/ToggleSwitch";
 
-export default function AddExpForm({ rate, days, onAdd }) {
+export default function AddExpForm({ rate, days, travelerNames, onAdd }) {
   const [name, setName] = useState("");
   const [amt, setAmt] = useState("");
   const [yen, setYen] = useState("");
@@ -11,6 +11,7 @@ export default function AddExpForm({ rate, days, onAdd }) {
   const [ok, setOk] = useState(false);
   const [mode, setMode] = useState("krw");
   const [day, setDay] = useState(null);
+  const [paidBy, setPaidBy] = useState(0);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
@@ -42,10 +43,18 @@ export default function AddExpForm({ rate, days, onAdd }) {
           </div>
         </div>
       )}
+      {travelerNames?.length > 1 && (
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>결제자</label>
+          <div style={{ display: "flex", gap: S.xs }}>
+            {travelerNames.map((n, i) => <button key={i} style={{ ...pill(paidBy === i), fontSize: 11, padding: "4px 10px" }} onClick={() => setPaidBy(i)}>{n}</button>)}
+          </div>
+        </div>
+      )}
       <label style={{ display: "flex", alignItems: "center", gap: S.sm, fontSize: 12, color: T.textSoft }}>
         <ToggleSwitch checked={ok} onCheckedChange={setOk} />확정 비용
       </label>
-      <button style={btnPrimary} disabled={!name || (!amt && !yen)} onClick={() => onAdd({ name, amt: Number(amt), cat, ok, day })}>추가하기</button>
+      <button style={btnPrimary} disabled={!name || (!amt && !yen)} onClick={() => onAdd({ name, amt: Number(amt), cat, ok, day, paidBy })}>추가하기</button>
     </div>
   );
 }

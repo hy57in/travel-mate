@@ -8,6 +8,7 @@ export default function SettingsForm({ trip, theme, setTheme, onSave, onReset })
   const [dates, setDates] = useState(trip.dates);
   const [sd, setSd] = useState(trip.startDate || "");
   const [trav, setTrav] = useState(String(trip.travelers));
+  const [names, setNames] = useState((trip.travelerNames || []).join(", "));
   const [rate, setRate] = useState(String(trip.rate));
 
   return (
@@ -34,6 +35,10 @@ export default function SettingsForm({ trip, theme, setTheme, onSave, onReset })
           <input type="number" step="0.01" style={inputStyle} value={rate} onChange={e => setRate(e.target.value)} />
         </div>
       </div>
+      <div>
+        <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>동행자 이름 (쉼표 구분)</label>
+        <input style={inputStyle} value={names} onChange={e => setNames(e.target.value)} placeholder="효진, 승민" />
+      </div>
       {theme != null && (
         <div>
           <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>테마</label>
@@ -44,7 +49,7 @@ export default function SettingsForm({ trip, theme, setTheme, onSave, onReset })
           </div>
         </div>
       )}
-      <button style={btnPrimary} onClick={() => onSave({ name, emoji, dates, startDate: sd, travelers: Number(trav), rate: Number(rate) })}>저장</button>
+      <button style={btnPrimary} onClick={() => onSave({ name, emoji, dates, startDate: sd, travelers: Number(trav), travelerNames: names.split(",").map(n => n.trim()).filter(Boolean), rate: Number(rate) })}>저장</button>
       {onReset && (
         <button style={{ background: "none", border: "none", fontSize: 12, color: T.textMuted, cursor: "pointer", marginTop: S.sm, textAlign: "center", width: "100%" }} onClick={onReset}>
           ↺ 모든 데이터 초기화

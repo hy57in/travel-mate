@@ -6,7 +6,7 @@ import ExpInline from "./forms/ExpInline";
 
 export default function BudgetTab({
   trip, expenseFilter, setExpenseFilter, filteredExpenses, confirmedAmount, estimatedAmount, total, perPerson,
-  categoryTotals, donutData, editingExpenseId, setEditingExpenseId,
+  categoryTotals, donutData, settlement, editingExpenseId, setEditingExpenseId,
   setDialog, setConfirmDelete, updateTrip, exportCSV,
 }) {
   return (
@@ -69,6 +69,35 @@ export default function BudgetTab({
         );
       })()}
 
+      {/* Settlement */}
+      {settlement?.length > 1 && (() => {
+        const overpaid = settlement.filter(s => s.diff > 0);
+        const underpaid = settlement.filter(s => s.diff < 0);
+        return (
+          <div style={{ ...glass, padding: S.lg }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: S.sm }}>💸 정산</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
+              {settlement.map((s, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, padding: `${S.xs}px 0` }}>
+                  <span style={{ color: T.textSoft }}>{s.name}</span>
+                  <span style={{ fontVariantNumeric: "tabular-nums" }}>
+                    <span style={{ color: T.textMuted, marginRight: S.sm }}>지출 ₩{fmt(s.paid)}</span>
+                    <span style={{ fontWeight: 700, color: s.diff > 0 ? T.mint : s.diff < 0 ? T.coral : T.text }}>
+                      {s.diff > 0 ? `+₩${fmt(s.diff)}` : s.diff < 0 ? `-₩${fmt(Math.abs(s.diff))}` : "±0"}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+            {overpaid.length > 0 && underpaid.length > 0 && (
+              <div style={{ marginTop: S.sm, padding: `${S.sm}px ${S.md}px`, borderRadius: T.rSm, background: T.mintLight, fontSize: 12, fontWeight: 600, color: T.mint, textAlign: "center" }}>
+                {underpaid.map(u => `${u.name}`).join(", ")} → {overpaid.map(o => `${o.name}`).join(", ")}에게 ₩{fmt(Math.abs(underpaid[0].diff))} 보내기
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Filter + actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", gap: S.xs, overflow: "hidden" }}>
@@ -91,6 +120,7 @@ export default function BudgetTab({
                   e={e}
                   rate={trip.rate}
                   days={trip.days}
+                  travelerNames={trip.travelerNames}
                   onSave={upd => { updateTrip({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ...upd } : x) }); setEditingExpenseId(null); }}
                   onCancel={() => setEditingExpenseId(null)}
                 />

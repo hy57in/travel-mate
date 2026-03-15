@@ -5,6 +5,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { S, T, TYPE_EMOJI } from "../tokens";
 import { glass, inputStyle } from "../styles";
 import Empty from "./ui/Empty";
+import DayMap from "./ui/DayMap";
 
 function SortableItem({ id, di, ii, item, isNext, setDialog }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
@@ -120,6 +121,8 @@ export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDa
                     {day.memo}
                   </div>
                 )}
+
+                <DayMap items={day.items} />
 
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd(di)}>
                   <SortableContext items={day.items.map((_, ii) => `item-${ii}`)} strategy={verticalListSortingStrategy}>

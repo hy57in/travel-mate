@@ -7,9 +7,30 @@ export default function ItemForm({ item, onSave, onDelete }) {
   const [text, setText] = useState(item?.text || "");
   const [type, setType] = useState(item?.type || "activity");
   const [url, setUrl] = useState(item?.url || "");
+  const [lat, setLat] = useState(item?.lat || null);
+  const [lng, setLng] = useState(item?.lng || null);
   const [hl, setHl] = useState(item?.hl || false);
   const [skip, setSkip] = useState(item?.skip || false);
   const [pend, setPend] = useState(item?.pend || false);
+  const [searching, setSearching] = useState(false);
+
+  const searchPlace = () => {
+    const query = text.replace(/[#\d]+$/, "").trim();
+    if (!query) return;
+    setSearching(true);
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " Tokyo Japan")}&format=json&limit=1`, {
+      headers: { "Accept-Language": "ko" },
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data[0]) {
+          setLat(Number(data[0].lat));
+          setLng(Number(data[0].lon));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setSearching(false));
+  };
 
   const statusPill = (active, label, color) => ({
     padding: `${S.sm}px ${S.md}px`, borderRadius: 50, fontSize: 12, fontWeight: 600,
@@ -36,6 +57,26 @@ export default function ItemForm({ item, onSave, onDelete }) {
         <input style={inputStyle} value={url} onChange={e => setUrl(e.target.value)} placeholder="구글맵 또는 장소 URL" />
       </div>
       <div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: S.xs }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft }}>📍 지도 위치</label>
+          <button
+            style={{ ...pill(false), fontSize: 10, padding: "3px 10px", border: `1.5px solid ${T.mint}`, color: T.mint }}
+            onClick={searchPlace}
+            disabled={searching || !text}
+          >
+            {searching ? "검색중..." : lat ? "재검색" : "장소 검색"}
+          </button>
+        </div>
+        {lat ? (
+          <div style={{ display: "flex", alignItems: "center", gap: S.sm }}>
+            <span style={{ fontSize: 11, color: T.textSoft, flex: 1 }}>📍 {lat.toFixed(4)}, {lng.toFixed(4)}</span>
+            <button style={{ background: "none", border: "none", fontSize: 11, color: T.textMuted, cursor: "pointer" }} onClick={() => { setLat(null); setLng(null); }}>삭제</button>
+          </div>
+        ) : (
+          <div style={{ fontSize: 11, color: T.textMuted }}>내용 입력 후 "장소 검색"을 누르면 지도에 표시됩니다</div>
+        )}
+      </div>
+      <div>
         <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>유형</label>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: S.xs }}>
           {TYPES.map(t => (
@@ -53,7 +94,7 @@ export default function ItemForm({ item, onSave, onDelete }) {
           <button style={statusPill(pend, "미정", T.amber)} onClick={() => { setPend(!pend); if (!pend) { setHl(false); setSkip(false); } }}>미정</button>
         </div>
       </div>
-      <button style={btnPrimary} disabled={!time || !text} onClick={() => onSave({ time, text, type, url: url || undefined, hl, skip, pend })}>
+      <button style={btnPrimary} disabled={!time || !text} onClick={() => onSave({ time, text, type, url: url || undefined, lat: lat || undefined, lng: lng || undefined, hl, skip, pend })}>
         {item ? "수정" : "추가"}
       </button>
       {onDelete && (

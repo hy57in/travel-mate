@@ -35,8 +35,9 @@ export default function DayMap({ items }) {
       >
         <ZoomControl position="bottomright" />
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           attribution=""
+          subdomains="abcd"
         />
         {withCoords.map((it, i) => (
           <Marker key={i} position={[it.lat, it.lng]} icon={createIcon(i)}>

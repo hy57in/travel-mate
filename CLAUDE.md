@@ -100,13 +100,15 @@ const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
 - 모든 label에 `display: "block", marginBottom: S.xs` 통일
 - 컴포넌트 내 폼 gap은 S.md (12px), 아이템 간 gap은 S.sm (8px) 통일
 
-## 향후 개선 아이디어 (미구현)
-- ~~일정 항목에 구글맵 링크/장소 URL 필드~~ ✅ 구현됨
-- ~~Day 추가/삭제/순서 변경~~ ✅ 구현됨 (추가/삭제/편집, 순서 변경은 제외)
-- ~~경비에 Day 태깅 + Day별 소계~~ ✅ 구현됨
-- 체크리스트 드래그 정렬
-- ~~다크 모드~~ ✅ 구현됨 (CSS Custom Properties, 라이트/다크/자동 전환)
-- PWA 오프라인 지원
+## 구현 완료
+- 일정 항목에 장소 URL 필드
+- Day 추가/삭제/편집
+- 경비에 Day 태깅 + Day별 소계
+- 체크리스트 드래그 정렬 (@dnd-kit)
+- 다크 모드 (CSS Custom Properties, 라이트/다크/자동 전환)
+- 일정/체크리스트 아이템 드래그앤드롭 순서 변경
+- custom hooks 분리 (useTrips, useTheme)
+- 의미 있는 prop 이름으로 리팩토링
 
 ## 마이그레이션 참고 (아티팩트 → 독립 React 앱)
 아티팩트 환경에서 클로드코드 독립 프로젝트로 옮길 때 주의:

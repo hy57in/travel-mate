@@ -148,7 +148,7 @@ export default function BudgetTab({
           );
         })}
       </div>
-      {!filteredExpenses.length && <Empty emoji="💰" text="경비가 없어요" />}
+      {!filteredExpenses.length && <Empty emoji="💰" text="경비가 없어요" action="＋ 추가" onAction={() => setDialog({ type: "addExp" })} />}
     </div>
   );
 }

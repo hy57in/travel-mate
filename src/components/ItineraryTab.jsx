@@ -130,7 +130,7 @@ export default function ItineraryTab({ trip, expandedDay, setExpandedDay, sortDa
           </div>
         );
       })}
-      {!trip.days.length && <Empty emoji="📅" text="일정이 없어요" />}
+      {!trip.days.length && <Empty emoji="📅" text="일정이 없어요" action="＋ Day 추가" onAction={addDay} />}
       <button onClick={addDay} style={{ width: "100%", padding: `${S.md}px 0`, borderRadius: T.r, border: `1.5px dashed ${T.coral}`, background: T.coralLight, fontSize: 13, fontWeight: 600, color: T.coral, cursor: "pointer" }}>＋ Day 추가</button>
     </div>
   );

@@ -1,6 +1,6 @@
 export const DEFAULT_TRIPS = [{
   id: "tokyo-hakone-2026", name: "\uB3C4\uCFC4\xB7\uD558\uCF54\uB124", emoji: "\uD83D\uDDFC",
-  dates: "2026.03.26 ~ 03.30", startDate: "2026-03-26", travelers: 2, rate: 9.29,
+  dates: "2026.03.26 ~ 03.30", startDate: "2026-03-26", travelers: 2, travelerNames: ["\uD6A8\uC9C4", "\uC2B9\uBBFC"], rate: 9.29,
   memo: "\uD6A8\uC9C4+\uC2B9\uBBFC \uB3C4\uCFC4\xB7\uD558\uCF54\uB124 4\uBC15 5\uC77C\n\n\uD83D\uDCCC \uD575\uC2EC\n- \uAC90\uCE74\uC0AC\uCFE0\uADF8\uB77C \uC571 \uCFE0\uD3F0 \uAF2D \uC81C\uC2DC\n- \uD558\uCF54\uB124: \uC624\uC640\uCFE0\uB2E4\uB2C8+\uD558\uCF54\uB124\uC9C4\uC790 \uD544\uC218\n- \uB80C\uD130\uCE74 1\uBC15 (Day2~3 \uC624\uC804)",
   days: [
     { date: "3/26 (\uBAA9)", title: "\uB3C4\uCC29 + \uBC9A\uAF43 + \uC0AC\uCF00", memo: "", items: [

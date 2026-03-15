@@ -23,7 +23,7 @@ export default function App() {
     trips, activeId, setActiveId, loading, trip,
     persist, updateTrip, reset, nextId,
     sortDayItems, reorderItems, addDay, deleteDay, updateDay,
-    budgetSummary, checklistSummary, todayDayIndex, ddayText, exportCSV,
+    budgetSummary, checklistSummary, todayDayIndex, ddayText, shareTrip, exportCSV,
   } = useTrips();
   const { theme, setTheme } = useTheme();
   const { toast, show: showToast } = useToast();
@@ -61,7 +61,7 @@ export default function App() {
   }
   if (!trip) return null;
 
-  const { confirmedAmount, estimatedAmount, total, perPerson, categoryTotals, donutData } = budgetSummary;
+  const { confirmedAmount, estimatedAmount, total, perPerson, categoryTotals, donutData, settlement } = budgetSummary;
   const { done: checkDone, total: checkTotal, percent: checkPercent } = checklistSummary;
 
   const handleDeleteDay = (dayIndex) => {
@@ -89,6 +89,7 @@ export default function App() {
         input:focus, textarea:focus { border-color: ${T.coral} !important; }
         :root[data-theme="dark"] input, :root[data-theme="dark"] textarea, :root[data-theme="dark"] select { color-scheme: dark; }
         @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) input, :root:not([data-theme="light"]) textarea, :root:not([data-theme="light"]) select { color-scheme: dark; } }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
         * { -webkit-tap-highlight-color: transparent; }
       `}</style>
 
@@ -104,6 +105,7 @@ export default function App() {
             <button style={{ ...pill(false), border: `1.5px dashed ${T.textMuted}`, padding: "5px 10px" }} onClick={() => setDialog({ type: "trip" })}>＋</button>
           </div>
           <div style={{ display: "flex", gap: S.xs, flexShrink: 0 }}>
+            <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => { navigator.clipboard.writeText(shareTrip()); showToast("일정이 복사되었습니다"); }}>📋</button>
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => setTheme(theme === "dark" ? "light" : theme === "light" ? "dark" : "dark")}>{theme === "dark" ? "☀️" : "🌙"}</button>
             <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", padding: S.xs }} onClick={() => setDialog({ type: "settings" })}>⚙️</button>
           </div>
@@ -151,7 +153,7 @@ export default function App() {
             filteredExpenses={filteredExpenses}
             confirmedAmount={confirmedAmount} estimatedAmount={estimatedAmount}
             total={total} perPerson={perPerson}
-            categoryTotals={categoryTotals} donutData={donutData}
+            categoryTotals={categoryTotals} donutData={donutData} settlement={settlement}
             editingExpenseId={editingExpenseId} setEditingExpenseId={setEditingExpenseId}
             setDialog={setDialog} setConfirmDelete={setConfirmDelete}
             updateTrip={updateTrip} exportCSV={exportCSV}
@@ -177,7 +179,7 @@ export default function App() {
         {fabOpen && (
           <div style={{ ...glass, width: 300, padding: S.lg, boxShadow: T.shadowLg }} className="fade-in">
             <QuickExp
-              rate={trip.rate} days={trip.days}
+              rate={trip.rate} days={trip.days} travelerNames={trip.travelerNames}
               onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setFabOpen(false); showToast("경비가 추가되었습니다"); }}
               onClose={() => setFabOpen(false)}
             />
@@ -228,7 +230,7 @@ export default function App() {
             {dialog?.type === "addExp" && (
               <>
                 <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>💰 경비 추가</Dialog.Title></div>
-                <AddExpForm rate={trip.rate} days={trip.days} onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setDialog(null); showToast("경비가 추가되었습니다"); }} />
+                <AddExpForm rate={trip.rate} days={trip.days} travelerNames={trip.travelerNames} onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setDialog(null); showToast("경비가 추가되었습니다"); }} />
               </>
             )}
             {dialog?.type === "addChk" && (

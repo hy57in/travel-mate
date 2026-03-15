@@ -42,6 +42,21 @@ function SortableCheckItem({ id, item, editingCheckId, setEditingCheckId, setCon
   );
 }
 
+const PACKING_TEMPLATE = [
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uC5EC\uAD8C" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uD56D\uACF5\uAD8C/e\uD2F0\uCF13 \uC2A4\uD06C\uB9B0\uC0F7" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uD658\uC804 \uC5D4\uD654" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "eSIM/\uC640\uC774\uD30C\uC774" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uCDA9\uC804\uAE30 + \uCF00\uC774\uBE14" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uBCF4\uC870\uBC30\uD130\uB9AC" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uC6B0\uC0B0/\uC6B0\uBE44" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uC138\uBA74\uB3C4\uAD6C/\uD654\uC7A5\uD488" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uC0C1\uBE44\uC57D" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uC120\uAE00\uB77C\uC2A4" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uCE90\uB9AC\uC5B4/\uBC31\uD329" },
+  { cat: "\uC9D0\uC2F8\uAE30", text: "\uD3B8\uD55C \uC2E0\uBC1C" },
+];
+
 export default function ChecklistTab({
   trip, checklistFilter, setChecklistFilter, filteredChecklist, checkDone, checkTotal, checkPercent,
   editingCheckId, setEditingCheckId, setDialog, setConfirmDelete, updateTrip,
@@ -87,7 +102,14 @@ export default function ChecklistTab({
         <div style={{ display: "flex", gap: S.xs, overflow: "hidden" }}>
           {CC.map(c => <button key={c} style={pill(checklistFilter === c)} onClick={() => setChecklistFilter(c)}>{c}</button>)}
         </div>
-        <button onClick={() => setDialog({ type: "addChk" })} style={{ ...pill(false), border: `1.5px dashed ${T.coral}`, color: T.coral, flexShrink: 0 }}>＋</button>
+        <div style={{ display: "flex", gap: S.xs, flexShrink: 0 }}>
+          <button onClick={() => {
+            const maxId = Math.max(0, ...trip.checklist.map(c => c.id));
+            const newItems = PACKING_TEMPLATE.filter(t => !trip.checklist.some(c => c.text === t.text)).map((t, i) => ({ ...t, id: maxId + i + 1, done: false }));
+            if (newItems.length) updateTrip({ checklist: [...trip.checklist, ...newItems] });
+          }} style={{ ...pill(false), border: `1.5px dashed ${T.amber}`, color: T.amber, fontSize: 11 }}>🧳 템플릿</button>
+          <button onClick={() => setDialog({ type: "addChk" })} style={{ ...pill(false), border: `1.5px dashed ${T.coral}`, color: T.coral }}>＋</button>
+        </div>
       </div>
 
       {/* Items */}

@@ -105,23 +105,35 @@ export default function useTrips() {
 
   // Derived budget values (js-combine-iterations: single pass)
   const budgetSummary = useMemo(() => {
-    if (!trip) return { confirmedAmount: 0, estimatedAmount: 0, total: 0, perPerson: 0, categoryTotals: {}, donutData: [] };
+    if (!trip) return { confirmedAmount: 0, estimatedAmount: 0, total: 0, perPerson: 0, categoryTotals: {}, donutData: [], settlement: [] };
     let confirmedAmount = 0;
     let estimatedAmount = 0;
     const categoryTotals = {};
+    const paidByPerson = {};
     for (const expense of trip.expenses) {
       if (expense.ok) confirmedAmount += expense.amt;
       else estimatedAmount += expense.amt;
       categoryTotals[expense.cat] = (categoryTotals[expense.cat] || 0) + expense.amt;
+      const who = expense.paidBy ?? 0;
+      paidByPerson[who] = (paidByPerson[who] || 0) + expense.amt;
     }
     const total = confirmedAmount + estimatedAmount;
-    const perPerson = Math.round(total / (trip.travelers || 2));
+    const travelers = trip.travelers || 2;
+    const perPerson = Math.round(total / travelers);
     const donutData = Object.entries(categoryTotals).map(([cat, value]) => ({
       color: CAT[cat]?.color || "#999",
       value,
       label: cat,
     }));
-    return { confirmedAmount, estimatedAmount, total, perPerson, categoryTotals, donutData };
+    // Settlement: who owes whom
+    const names = trip.travelerNames || [];
+    const settlement = names.map((name, i) => ({
+      name,
+      paid: paidByPerson[i] || 0,
+      shouldPay: perPerson,
+      diff: (paidByPerson[i] || 0) - perPerson,
+    }));
+    return { confirmedAmount, estimatedAmount, total, perPerson, categoryTotals, donutData, settlement };
   }, [trip]);
 
   // Derived checklist values
@@ -150,6 +162,21 @@ export default function useTrips() {
     if (dday === 0) return "D-Day!";
     return `\uC5EC\uD589 ${-dday}\uC77C\uCC28`;
   }, [trip?.startDate]);
+
+  // Share as text
+  const shareTrip = useCallback(() => {
+    if (!trip) return "";
+    const lines = [`${trip.emoji} ${trip.name}`, `${trip.dates} · ${trip.travelers}인`, ""];
+    for (const [i, day] of trip.days.entries()) {
+      lines.push(`📅 Day ${i + 1} — ${day.title} (${day.date})`);
+      for (const item of day.items) {
+        const prefix = item.hl ? "⭐" : item.skip ? "~~" : item.pend ? "❓" : "  ";
+        lines.push(`  ${prefix} ${item.time} ${item.text}`);
+      }
+      lines.push("");
+    }
+    return lines.join("\n");
+  }, [trip]);
 
   // CSV export
   const exportCSV = useCallback(() => {
@@ -185,6 +212,7 @@ export default function useTrips() {
     checklistSummary,
     todayDayIndex,
     ddayText,
+    shareTrip,
     exportCSV,
   };
 }

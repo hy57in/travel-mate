@@ -1,59 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import * as Switch from "@radix-ui/react-switch";
+import { S, T, CAT, fmt, toY } from "./tokens";
+import { glass, pill, btnPrimary, btnOutline } from "./styles";
+import { load, save } from "./storage";
 
-/* ═══ DESIGN TOKENS ═══ */
-const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24 };
-const T = {
-  coral: "#E07460", coralLight: "#FDE8E4", peach: "#FFF5F0",
-  indigo: "#2D3561", indigoLight: "#E8EAF6",
-  mint: "#3EBCB4", mintLight: "#E0F5F3",
-  amber: "#E89B52", amberLight: "#FFF2E0",
-  violet: "#7056E0", violetLight: "#EDE7FF",
-  sand: "#FAF6F1", cream: "#FFFCF9",
-  text: "#1A1A2E", textSoft: "#636A78", textMuted: "#9CA3AF",
-  glass: "rgba(255,255,255,0.82)", glassBorder: "rgba(0,0,0,0.06)",
-  shadow: "0 2px 12px rgba(45,53,97,0.07)",
-  shadowLg: "0 8px 28px rgba(45,53,97,0.10)",
-  r: 14, rSm: 10,
-};
+import ItineraryTab from "./components/ItineraryTab";
+import BudgetTab from "./components/BudgetTab";
+import ChecklistTab from "./components/ChecklistTab";
+import MemoTab from "./components/MemoTab";
+import QuickExp from "./components/forms/QuickExp";
+import ItemForm from "./components/forms/ItemForm";
+import AddExpForm from "./components/forms/AddExpForm";
+import AddChkForm from "./components/forms/AddChkForm";
+import AddTripForm from "./components/forms/AddTripForm";
+import SettingsForm from "./components/forms/SettingsForm";
 
-const CAT = {
-  "교통": { color: T.indigo, bg: T.indigoLight, emoji: "🚃" },
-  "숙소": { color: T.amber, bg: T.amberLight, emoji: "🏨" },
-  "식비": { color: T.mint, bg: T.mintLight, emoji: "🍽️" },
-  "활동": { color: T.violet, bg: T.violetLight, emoji: "⭐" },
-  "기타": { color: T.textSoft, bg: "#F3F4F6", emoji: "📦" },
-};
-const EC = Object.keys(CAT);
-const CC = ["전체", "예약", "서류", "준비", "짐싸기"];
-const TYPES = [
-  { v: "flight", emoji: "✈️", l: "항공" }, { v: "transit", emoji: "🚃", l: "교통" },
-  { v: "car", emoji: "🚗", l: "차량" }, { v: "hotel", emoji: "🏨", l: "숙소" },
-  { v: "food", emoji: "🍽️", l: "식사" }, { v: "activity", emoji: "⭐", l: "활동" },
-  { v: "cherry", emoji: "🌸", l: "벚꽃" },
-];
-const TYPE_EMOJI = Object.fromEntries(TYPES.map(t => [t.v, t.emoji]));
-const fmt = n => n.toLocaleString("ko-KR");
-const toY = (k, r) => Math.round(k / r);
-const toK = (y, r) => Math.round(y * r);
-
-/* ═══ STORAGE ═══ */
-function load() { try { const d = localStorage.getItem("tp-v6"); return d ? JSON.parse(d) : null; } catch { return null; } }
-function save(d) { try { localStorage.setItem("tp-v6", JSON.stringify(d)); } catch {} }
-
-/* ═══ STYLES ═══ */
-const glass = { background: T.glass, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", border: `1px solid ${T.glassBorder}`, borderRadius: T.r, boxShadow: T.shadow };
-const pill = (active) => ({
-  padding: "6px 14px", borderRadius: 50, fontSize: 12, fontWeight: 600, cursor: "pointer", border: "none", transition: "all 0.2s",
-  background: active ? T.indigo : "rgba(255,255,255,0.7)", color: active ? "#fff" : T.textSoft,
-  whiteSpace: "nowrap", flexShrink: 0,
-});
-const inputStyle = { borderRadius: T.rSm, border: `1.5px solid #E5E7EB`, padding: "10px 14px", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box", background: "rgba(255,255,255,0.85)", fontFamily: "inherit", transition: "border-color 0.15s" };
-const btnPrimary = { background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", border: "none", borderRadius: T.rSm, padding: "12px 0", fontSize: 14, fontWeight: 700, cursor: "pointer", width: "100%" };
-const btnOutline = { background: "transparent", color: T.textSoft, border: `1.5px solid #E5E7EB`, borderRadius: T.rSm, padding: "10px 16px", fontSize: 13, cursor: "pointer" };
-
-/* ═══ DEFAULT DATA ═══ */
+/* === DEFAULT DATA === */
 const DEF = [{
   id: "tokyo-hakone-2026", name: "도쿄·하코네", emoji: "🗼",
   dates: "2026.03.26 ~ 03.30", startDate: "2026-03-26", travelers: 2, rate: 9.29,
@@ -143,38 +105,7 @@ const DEF = [{
   ],
 }];
 
-/* ═══ MINI DONUT ═══ */
-function Donut({ data, size = 72 }) {
-  const total = data.reduce((s, d) => s + d.value, 0);
-  let cum = 0;
-  const r = size / 2, ir = r - 9;
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      {data.map((d, i) => {
-        const pct = total > 0 ? d.value / total : 0;
-        const start = cum * 2 * Math.PI - Math.PI / 2;
-        cum += pct;
-        const end = cum * 2 * Math.PI - Math.PI / 2;
-        const large = pct > 0.5 ? 1 : 0;
-        const x1 = r + ir * Math.cos(start), y1 = r + ir * Math.sin(start);
-        const x2 = r + ir * Math.cos(end), y2 = r + ir * Math.sin(end);
-        return pct > 0.001 ? <path key={i} d={`M${r},${r} L${x1},${y1} A${ir},${ir} 0 ${large} 1 ${x2},${y2} Z`} fill={d.color} opacity={0.85} /> : null;
-      })}
-      <circle cx={r} cy={r} r={ir - 5} fill="white" />
-    </svg>
-  );
-}
-
-/* ═══ SWITCH HELPER ═══ */
-function ToggleSwitch({ checked, onCheckedChange }) {
-  return (
-    <Switch.Root checked={checked} onCheckedChange={onCheckedChange} style={{width:42,height:25,backgroundColor:checked?"#E07460":"#ccc",borderRadius:50,position:"relative",border:"none",cursor:"pointer"}}>
-      <Switch.Thumb style={{display:"block",width:21,height:21,backgroundColor:"white",borderRadius:"50%",transition:"transform 0.1s",transform:checked?"translateX(17px)":"translateX(2px)",marginTop:2}} />
-    </Switch.Root>
-  );
-}
-
-/* ═══ MAIN APP ═══ */
+/* === MAIN APP === */
 export default function App() {
   const [trips, setTrips] = useState(DEF);
   const [aid, setAid] = useState(DEF[0].id);
@@ -256,7 +187,7 @@ export default function App() {
         * { -webkit-tap-highlight-color: transparent; }
       `}</style>
 
-      {/* ── HEADER ── */}
+      {/* -- HEADER -- */}
       <div style={{ padding: `${S.xxl}px ${S.xl}px ${S.lg}px` }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: S.sm }}>
           <div style={{ display: "flex", alignItems: "center", gap: S.sm, overflow: "hidden" }}>
@@ -278,7 +209,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* ── TABS ── */}
+      {/* -- TABS -- */}
       <div style={{ padding: `0 ${S.xl}px` }}>
         <div style={{ display: "flex", gap: S.xs, ...glass, padding: S.xs }}>
           {[
@@ -297,192 +228,40 @@ export default function App() {
       </div>
 
       <div style={{ padding: `${S.lg}px ${S.xl}px 0` }}>
-
-        {/* ═══ ITINERARY ═══ */}
         {tab === "itinerary" && (
-          <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-            {trip.days.map((day, di) => {
-              const open = exDay === di;
-              return (
-                <div key={di} style={{ ...glass, overflow: "hidden", transition: "all 0.2s" }}>
-                  <button onClick={() => setExDay(open ? -1 : di)} style={{ width: "100%", textAlign: "left", padding: `${S.lg}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.md, border: "none", background: "transparent", cursor: "pointer" }}>
-                    <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, minWidth: 44, height: 44, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, letterSpacing: 0.5 }}>DAY</span>
-                      <span style={{ fontSize: 18, fontWeight: 800, lineHeight: 1 }}>{di + 1}</span>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>{day.title}</div>
-                      <div style={{ fontSize: 11, color: T.textSoft, marginTop: S.xs }}>{day.date}</div>
-                    </div>
-                    <span style={{ fontSize: 18, color: T.textMuted, transition: "transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0)" }}>▾</span>
-                  </button>
-
-                  {open && (
-                    <div style={{ padding: `0 ${S.lg}px ${S.lg}px` }}>
-                      {day.memo && <div style={{ fontSize: 11, color: T.textSoft, background: T.peach, borderRadius: T.rSm, padding: `${S.sm}px ${S.md}px`, marginBottom: S.md, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>{day.memo}</div>}
-
-                      <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
-                        {day.items.map((item, ii) => (
-                          <div key={ii} style={{ display: "flex", alignItems: "center", gap: S.sm, padding: `${S.sm}px ${S.md}px`, borderRadius: T.rSm, transition: "all 0.15s", background: item.hl ? T.coralLight : item.pend ? T.amberLight : "transparent", borderLeft: item.hl ? `3px solid ${T.coral}` : item.pend ? `3px solid ${T.amber}` : "3px solid transparent", opacity: item.skip ? 0.5 : 1 }}>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
-                              <button onClick={() => moveItem(di, ii, -1)} style={{ background: "none", border: "none", cursor: ii === 0 ? "default" : "pointer", fontSize: 10, color: ii === 0 ? T.glassBorder : T.textMuted, padding: "1px 4px", lineHeight: 1 }}>▲</button>
-                              <button onClick={() => moveItem(di, ii, 1)} style={{ background: "none", border: "none", cursor: ii === day.items.length - 1 ? "default" : "pointer", fontSize: 10, color: ii === day.items.length - 1 ? T.glassBorder : T.textMuted, padding: "1px 4px", lineHeight: 1 }}>▼</button>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: S.sm, flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setDlg({ type: "item", dayIdx: di, itemIdx: ii })}>
-                              <div style={{ width: 34, height: 34, borderRadius: S.sm, background: item.hl ? `linear-gradient(135deg, ${T.coral}, ${T.amber})` : "#f3f3f3", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>
-                                {TYPE_EMOJI[item.type] || "📍"}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: item.pend ? T.amber : item.skip ? T.textMuted : T.text, textDecoration: item.skip ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.text}</div>
-                              </div>
-                              <span style={{ fontSize: 12, fontWeight: 600, color: T.textMuted, fontVariantNumeric: "tabular-nums", flexShrink: 0 }}>{item.time}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div style={{ display: "flex", gap: S.sm, marginTop: S.md }}>
-                        <button onClick={() => sortDay(di)} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px solid #e5e7eb`, background: "rgba(255,255,255,0.5)", fontSize: 12, fontWeight: 600, color: T.textSoft, cursor: "pointer" }}>⏱ 시간순</button>
-                        <button onClick={() => setDlg({ type: "item", dayIdx: di, isNew: true })} style={{ flex: 1, padding: `${S.sm}px 0`, borderRadius: T.rSm, border: `1.5px dashed ${T.coral}`, background: T.coralLight, fontSize: 12, fontWeight: 600, color: T.coral, cursor: "pointer" }}>＋ 추가</button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {!trip.days.length && <Empty emoji="📅" text="일정이 없어요" />}
-          </div>
+          <ItineraryTab trip={trip} exDay={exDay} setExDay={setExDay} sortDay={sortDay} moveItem={moveItem} setDlg={setDlg} />
         )}
-
-        {/* ═══ BUDGET ═══ */}
         {tab === "budget" && (
-          <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.lg }}>
-            <div style={{ background: `linear-gradient(135deg, ${T.indigo}, #4A3F8F)`, borderRadius: T.r, padding: S.xl, color: "#fff", boxShadow: "0 6px 24px rgba(45,53,97,0.18)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>총 예상 경비</div>
-                  <div style={{ fontSize: 26, fontWeight: 800, marginTop: S.xs, fontVariantNumeric: "tabular-nums" }}>₩{fmt(tot)}</div>
-                  <div style={{ fontSize: 12, opacity: 0.6, marginTop: S.xs }}>¥{fmt(toY(tot, trip.rate))}</div>
-                </div>
-                <Donut data={donutData} size={72} />
-              </div>
-              <div style={{ display: "flex", gap: S.lg, marginTop: S.md, fontSize: 12 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: S.xs }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.mint, display: "inline-block" }} />확정 ₩{fmt(okAmt)}</span>
-                <span style={{ display: "flex", alignItems: "center", gap: S.xs }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.amber, display: "inline-block" }} />예상 ₩{fmt(estAmt)}</span>
-              </div>
-              <div style={{ marginTop: S.md, background: "rgba(255,255,255,0.12)", borderRadius: S.sm, padding: `${S.sm}px ${S.md}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: 12, opacity: 0.8 }}>1인당</span>
-                <span style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>₩{fmt(pp)}</span>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: S.sm, overflow: "hidden" }}>
-              {Object.entries(catT).map(([c, a]) => {
-                const ct = CAT[c] || CAT["기타"];
-                const pct = tot > 0 ? Math.round((a / tot) * 100) : 0;
-                return <span key={c} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: ct.bg, color: ct.color, whiteSpace: "nowrap" }}>{ct.emoji} {c} {pct}%</span>;
-              })}
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: S.xs, overflow: "hidden" }}>
-                {["전체", ...EC].map(c => <button key={c} style={pill(exF === c)} onClick={() => setExF(c)}>{c}</button>)}
-              </div>
-              <div style={{ display: "flex", gap: S.sm, flexShrink: 0 }}>
-                <button onClick={exportCSV} style={{ ...btnOutline, padding: "6px 10px", fontSize: 12 }}>📥</button>
-                <button onClick={() => setDlg({ type: "addExp" })} style={{ ...pill(false), border: `1.5px dashed ${T.coral}`, color: T.coral }}>＋ 추가</button>
-              </div>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
-              {fExp.map(e => {
-                const ct = CAT[e.cat] || CAT["기타"];
-                if (editExp === e.id) return <div key={e.id} style={{ ...glass, padding: S.lg }}><ExpInline e={e} rate={trip.rate} onSave={upd => { ut({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ...upd } : x) }); setEditExp(null); }} onCancel={() => setEditExp(null)} /></div>;
-                return (
-                  <div key={e.id} style={{ ...glass, padding: `${S.md}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, borderLeft: `4px solid ${ct.color}`, cursor: "pointer" }} onClick={() => setEditExp(e.id)}>
-                    <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); ut({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ok: !x.ok } : x) }); }}>
-                      {e.ok ? "✅" : "⭕"}
-                    </button>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: S.sm }}>
-                        <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: ct.bg, color: ct.color, flexShrink: 0 }}>{ct.emoji} {e.cat}</span>
-                        <span style={{ fontSize: 13, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</span>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>₩{fmt(e.amt)}</div>
-                      <div style={{ fontSize: 10, color: T.textMuted }}>¥{fmt(toY(e.amt, trip.rate))}</div>
-                    </div>
-                    <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted, flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); setConfirmDel({ msg: `"${e.name}" 삭제?`, onOk: () => ut({ expenses: trip.expenses.filter(x => x.id !== e.id) }) }); }}>🗑</button>
-                  </div>
-                );
-              })}
-            </div>
-            {!fExp.length && <Empty emoji="💰" text="경비가 없어요" />}
-          </div>
+          <BudgetTab
+            trip={trip} exF={exF} setExF={setExF} fExp={fExp}
+            okAmt={okAmt} estAmt={estAmt} tot={tot} pp={pp}
+            catT={catT} donutData={donutData}
+            editExp={editExp} setEditExp={setEditExp}
+            setDlg={setDlg} setConfirmDel={setConfirmDel} ut={ut} exportCSV={exportCSV}
+          />
         )}
-
-        {/* ═══ CHECKLIST ═══ */}
         {tab === "checklist" && (
-          <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.lg }}>
-            <div style={{ ...glass, padding: S.xl }}>
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: S.sm }}>
-                <span style={{ fontSize: 30, fontWeight: 800, color: T.text }}>{ckPct}%</span>
-                <span style={{ fontSize: 12, color: T.textSoft }}>{ckDone}/{ckTot} 완료</span>
-              </div>
-              <div style={{ height: 6, borderRadius: 3, background: "#eee", overflow: "hidden" }}>
-                <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${T.coral}, ${T.amber})`, width: `${ckPct}%`, transition: "width 0.3s" }} />
-              </div>
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", gap: S.xs, overflow: "hidden" }}>{CC.map(c => <button key={c} style={pill(ckF === c)} onClick={() => setCkF(c)}>{c}</button>)}</div>
-              <button onClick={() => setDlg({ type: "addChk" })} style={{ ...pill(false), border: `1.5px dashed ${T.coral}`, color: T.coral, flexShrink: 0 }}>＋</button>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
-              {fChk.map(c => {
-                if (editChk === c.id) return <div key={c.id} style={{ ...glass, padding: S.lg }}><ChkInline c={c} onSave={upd => { ut({ checklist: trip.checklist.map(x => x.id === c.id ? { ...x, ...upd } : x) }); setEditChk(null); }} onCancel={() => setEditChk(null)} /></div>;
-                return (
-                  <div key={c.id} style={{ ...glass, padding: `${S.md}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, opacity: c.done ? 0.5 : 1 }}>
-                    <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer" }} onClick={() => ut({ checklist: trip.checklist.map(x => x.id === c.id ? { ...x, done: !x.done } : x) })}>{c.done ? "☑️" : "⬜"}</button>
-                    <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setEditChk(c.id)}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: c.done ? T.textMuted : T.text, textDecoration: c.done ? "line-through" : "none" }}>{c.text}</span>
-                      <span style={{ fontSize: 10, color: T.textMuted, marginLeft: S.sm, fontWeight: 600 }}>{c.cat}</span>
-                    </div>
-                    <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted }} onClick={() => setConfirmDel({ msg: `"${c.text}" 삭제?`, onOk: () => ut({ checklist: trip.checklist.filter(x => x.id !== c.id) }) })}>🗑</button>
-                  </div>
-                );
-              })}
-            </div>
-            {!fChk.length && <Empty emoji="✅" text="체크리스트 비어있어요" />}
-          </div>
+          <ChecklistTab
+            trip={trip} ckF={ckF} setCkF={setCkF} fChk={fChk}
+            ckDone={ckDone} ckTot={ckTot} ckPct={ckPct}
+            editChk={editChk} setEditChk={setEditChk}
+            setDlg={setDlg} setConfirmDel={setConfirmDel} ut={ut}
+          />
         )}
-
-        {/* ═══ MEMO ═══ */}
-        {tab === "memo" && (
-          <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-            <div style={{ ...glass, padding: S.lg }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, marginBottom: S.sm }}>📝 전체 메모</div>
-              <textarea style={{ ...inputStyle, minHeight: 100, resize: "none", lineHeight: 1.7 }} value={trip.memo || ""} onChange={e => ut({ memo: e.target.value })} placeholder="여행 전체 메모..." />
-            </div>
-            {trip.days.map((day, di) => (
-              <div key={di} style={{ ...glass, padding: S.lg }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: S.sm }}>Day {di + 1} · {day.date}</div>
-                <textarea style={{ ...inputStyle, minHeight: 60, resize: "none", lineHeight: 1.7 }} value={day.memo || ""} onChange={e => { const nd = [...trip.days]; nd[di] = { ...day, memo: e.target.value }; ut({ days: nd }); }} placeholder="메모..." />
-              </div>
-            ))}
-          </div>
-        )}
+        {tab === "memo" && <MemoTab trip={trip} ut={ut} />}
       </div>
 
-      {/* ── FAB ── */}
+      {/* -- FAB -- */}
       <div style={{ position: "fixed", bottom: S.xxl, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: S.md, zIndex: 50 }}>
-        {fab && <div style={{ ...glass, width: 300, padding: S.lg, boxShadow: T.shadowLg }} className="fade-in"><QuickExp rate={trip.rate} onAdd={exp => { ut({ expenses: [...trip.expenses, { ...exp, id: nid(trip.expenses) }] }); setFab(false); }} onClose={() => setFab(false)} /></div>}
+        {fab && (
+          <div style={{ ...glass, width: 300, padding: S.lg, boxShadow: T.shadowLg }} className="fade-in">
+            <QuickExp rate={trip.rate} onAdd={exp => { ut({ expenses: [...trip.expenses, { ...exp, id: nid(trip.expenses) }] }); setFab(false); }} onClose={() => setFab(false)} />
+          </div>
+        )}
         <button onClick={() => setFab(!fab)} style={{ width: 52, height: 52, borderRadius: "50%", border: "none", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 22, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px rgba(224,116,96,0.25)", animation: fab ? "none" : "pulse 2s infinite" }}>{fab ? "✕" : "₩"}</button>
       </div>
 
-      {/* ── DIALOGS ── */}
+      {/* -- DIALOGS -- */}
       <Dialog.Root open={!!dlg} onOpenChange={() => setDlg(null)}>
         <Dialog.Portal>
           <Dialog.Overlay style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:999}} />
@@ -518,142 +297,6 @@ export default function App() {
           </Dialog.Content>
         </Dialog.Portal>
       </Dialog.Root>
-    </div>
-  );
-}
-
-/* ═══ SUBCOMPONENTS ═══ */
-function Empty({ emoji, text }) {
-  return <div style={{ textAlign: "center", padding: "40px 0", color: T.textMuted }}><div style={{ fontSize: 36, marginBottom: 8 }}>{emoji}</div><div style={{ fontSize: 13, fontWeight: 600 }}>{text}</div></div>;
-}
-
-function ItemForm({ item, onSave, onDelete }) {
-  const [time, setTime] = useState(item?.time || ""); const [text, setText] = useState(item?.text || ""); const [type, setType] = useState(item?.type || "activity");
-  const [hl, setHl] = useState(item?.hl || false); const [skip, setSkip] = useState(item?.skip || false); const [pend, setPend] = useState(item?.pend || false);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <div style={{ display: "flex", gap: S.sm }}>
-        <div style={{ width: 80 }}><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>시간</label><input style={inputStyle} value={time} onChange={e => setTime(e.target.value)} placeholder="09:00" /></div>
-        <div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>내용</label><input style={inputStyle} value={text} onChange={e => setText(e.target.value)} placeholder="장소/활동" /></div>
-      </div>
-      <div style={{ display: "flex", gap: S.xs, flexWrap: "wrap" }}>{TYPES.map(t => <button key={t.v} style={{ ...pill(type === t.v), fontSize: 12, padding: "5px 10px" }} onClick={() => setType(t.v)}>{t.emoji} {t.l}</button>)}</div>
-      <div style={{ display: "flex", gap: S.lg, fontSize: 12, color: T.textSoft }}>
-        <label style={{ display: "flex", alignItems: "center", gap: S.xs }}><ToggleSwitch checked={hl} onCheckedChange={setHl} />핵심</label>
-        <label style={{ display: "flex", alignItems: "center", gap: S.xs }}><ToggleSwitch checked={skip} onCheckedChange={setSkip} />스킵</label>
-        <label style={{ display: "flex", alignItems: "center", gap: S.xs }}><ToggleSwitch checked={pend} onCheckedChange={setPend} />미정</label>
-      </div>
-      <div style={{ display: "flex", gap: S.sm }}>
-        <button style={{ ...btnPrimary, flex: 1 }} disabled={!time || !text} onClick={() => onSave({ time, text, type, hl, skip, pend })}>{item ? "수정" : "추가"}</button>
-        {onDelete && <button style={{ ...btnOutline, color: "#EF4444", borderColor: "#FCA5A5" }} onClick={onDelete}>삭제</button>}
-      </div>
-    </div>
-  );
-}
-
-function ExpInline({ e, rate, onSave, onCancel }) {
-  const [name, setName] = useState(e.name); const [amt, setAmt] = useState(String(e.amt)); const [yen, setYen] = useState(String(toY(e.amt, rate))); const [cat, setCat] = useState(e.cat); const [mode, setMode] = useState("krw");
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <input style={inputStyle} value={name} onChange={e => setName(e.target.value)} />
-      <div style={{ display: "flex", gap: S.sm, alignItems: "center" }}>
-        <button style={pill(mode === "krw")} onClick={() => setMode("krw")}>₩</button>
-        <button style={pill(mode === "yen")} onClick={() => setMode("yen")}>¥</button>
-        {mode === "krw" ? <input type="number" style={{ ...inputStyle, flex: 1 }} value={amt} onChange={ev => { setAmt(ev.target.value); setYen(String(toY(Number(ev.target.value), rate))); }} />
-          : <input type="number" style={{ ...inputStyle, flex: 1 }} value={yen} onChange={ev => { setYen(ev.target.value); setAmt(String(toK(Number(ev.target.value), rate))); }} />}
-      </div>
-      <div style={{ display: "flex", gap: S.xs }}>{EC.map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11, padding: "4px 10px" }} onClick={() => setCat(c)}>{c}</button>)}</div>
-      <div style={{ display: "flex", gap: S.sm }}><button style={{ ...btnPrimary, flex: 1 }} onClick={() => onSave({ name, amt: Number(amt), cat })}>저장</button><button style={{ ...btnOutline, flex: 0 }} onClick={onCancel}>취소</button></div>
-    </div>
-  );
-}
-
-function ChkInline({ c, onSave, onCancel }) {
-  const [text, setText] = useState(c.text); const [cat, setCat] = useState(c.cat);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <input style={inputStyle} value={text} onChange={e => setText(e.target.value)} />
-      <div style={{ display: "flex", gap: S.xs }}>{CC.filter(c => c !== "전체").map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11, padding: "4px 10px" }} onClick={() => setCat(c)}>{c}</button>)}</div>
-      <div style={{ display: "flex", gap: S.sm }}><button style={{ ...btnPrimary, flex: 1 }} onClick={() => onSave({ text, cat })}>저장</button><button style={{ ...btnOutline }} onClick={onCancel}>취소</button></div>
-    </div>
-  );
-}
-
-function QuickExp({ rate, onAdd, onClose }) {
-  const [name, setName] = useState(""); const [val, setVal] = useState(""); const [mode, setMode] = useState("yen"); const [cat, setCat] = useState("식비");
-  const ref = useRef(null); useEffect(() => { ref.current?.focus(); }, []);
-  const submit = () => { if (!name || !val) return; onAdd({ name, amt: mode === "yen" ? toK(Number(val), rate) : Number(val), cat, ok: true }); };
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}><span style={{ fontSize: 13, fontWeight: 800, color: T.text }}>⚡ 빠른 입력</span><button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16 }} onClick={onClose}>✕</button></div>
-      <input ref={ref} style={inputStyle} placeholder="뭐 샀어요?" value={name} onChange={e => setName(e.target.value)} />
-      <div style={{ display: "flex", gap: S.sm }}>
-        <button style={pill(mode === "yen")} onClick={() => setMode("yen")}>¥ 엔</button>
-        <button style={pill(mode === "krw")} onClick={() => setMode("krw")}>₩ 원</button>
-        <input type="number" style={{ ...inputStyle, flex: 1 }} placeholder="금액" value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => { if (e.key === "Enter") submit(); }} />
-      </div>
-      {val && <div style={{ fontSize: 11, color: T.textSoft, marginTop: -S.xs }}>{mode === "yen" ? `≈ ₩${fmt(toK(Number(val), rate))}` : `≈ ¥${fmt(toY(Number(val), rate))}`}</div>}
-      <div style={{ display: "flex", gap: S.xs }}>{EC.map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11, padding: "4px 10px" }} onClick={() => setCat(c)}>{(CAT[c]||{}).emoji} {c}</button>)}</div>
-      <button style={btnPrimary} disabled={!name || !val} onClick={submit}>추가</button>
-    </div>
-  );
-}
-
-function AddExpForm({ rate, onAdd }) {
-  const [name, setName] = useState(""); const [amt, setAmt] = useState(""); const [yen, setYen] = useState(""); const [cat, setCat] = useState("식비"); const [ok, setOk] = useState(false); const [mode, setMode] = useState("krw");
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <div><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>항목명</label><input style={inputStyle} placeholder="라멘 점심" value={name} onChange={e => setName(e.target.value)} /></div>
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: S.sm, marginBottom: S.sm }}><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft }}>금액</label><button style={{ ...pill(mode === "krw"), fontSize: 10 }} onClick={() => setMode("krw")}>₩</button><button style={{ ...pill(mode === "yen"), fontSize: 10 }} onClick={() => setMode("yen")}>¥</button></div>
-        {mode === "krw" ? <input type="number" style={inputStyle} placeholder="10000" value={amt} onChange={e => { setAmt(e.target.value); setYen(String(toY(Number(e.target.value), rate))); }} /> : <input type="number" style={inputStyle} placeholder="1000" value={yen} onChange={e => { setYen(e.target.value); setAmt(String(toK(Number(e.target.value), rate))); }} />}
-        {amt && <div style={{ fontSize: 10, color: T.textMuted, marginTop: S.xs }}>₩{fmt(Number(amt))} ≈ ¥{fmt(toY(Number(amt), rate))}</div>}
-      </div>
-      <div style={{ display: "flex", gap: S.sm }}>{EC.map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11 }} onClick={() => setCat(c)}>{(CAT[c]||{}).emoji} {c}</button>)}</div>
-      <label style={{ display: "flex", alignItems: "center", gap: S.sm, fontSize: 12, color: T.textSoft }}><ToggleSwitch checked={ok} onCheckedChange={setOk} />확정 비용</label>
-      <button style={btnPrimary} disabled={!name || (!amt && !yen)} onClick={() => onAdd({ name, amt: Number(amt), cat, ok })}>추가하기</button>
-    </div>
-  );
-}
-
-function AddChkForm({ onAdd }) {
-  const [text, setText] = useState(""); const [cat, setCat] = useState("준비");
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <div><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>할 일</label><input style={inputStyle} placeholder="여행자보험" value={text} onChange={e => setText(e.target.value)} /></div>
-      <div style={{ display: "flex", gap: S.sm }}>{CC.filter(c => c !== "전체").map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11 }} onClick={() => setCat(c)}>{c}</button>)}</div>
-      <button style={btnPrimary} disabled={!text} onClick={() => onAdd({ text, cat })}>추가하기</button>
-    </div>
-  );
-}
-
-function AddTripForm({ onAdd }) {
-  const [name, setName] = useState(""); const [emoji, setEmoji] = useState("🌏"); const [dates, setDates] = useState(""); const [trav, setTrav] = useState("2"); const [rate, setRate] = useState("9.29");
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <div style={{ fontSize: 11, fontWeight: 700, color: T.textSoft }}>새 여행</div>
-      <div style={{ display: "flex", gap: S.sm }}><input style={{ ...inputStyle, width: 50, textAlign: "center" }} value={emoji} onChange={e => setEmoji(e.target.value)} /><input style={{ ...inputStyle, flex: 1 }} placeholder="여행 이름" value={name} onChange={e => setName(e.target.value)} /></div>
-      <input style={inputStyle} placeholder="기간" value={dates} onChange={e => setDates(e.target.value)} />
-      <div style={{ display: "flex", gap: S.sm }}>
-        <div style={{ flex: 1 }}><label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: S.xs }}>인원</label><input type="number" style={inputStyle} value={trav} onChange={e => setTrav(e.target.value)} /></div>
-        <div style={{ flex: 1 }}><label style={{ fontSize: 10, color: T.textMuted, display: "block", marginBottom: S.xs }}>환율</label><input type="number" step="0.01" style={inputStyle} value={rate} onChange={e => setRate(e.target.value)} /></div>
-      </div>
-      <button style={btnPrimary} disabled={!name} onClick={() => onAdd({ name, emoji, dates, travelers: Number(trav), rate: Number(rate), startDate: "" })}>추가</button>
-    </div>
-  );
-}
-
-function SettingsForm({ trip, onSave }) {
-  const [name, setName] = useState(trip.name); const [emoji, setEmoji] = useState(trip.emoji); const [dates, setDates] = useState(trip.dates); const [sd, setSd] = useState(trip.startDate || ""); const [trav, setTrav] = useState(String(trip.travelers)); const [rate, setRate] = useState(String(trip.rate));
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
-      <div style={{ display: "flex", gap: S.sm }}><input style={{ ...inputStyle, width: 50, textAlign: "center" }} value={emoji} onChange={e => setEmoji(e.target.value)} /><input style={{ ...inputStyle, flex: 1 }} value={name} onChange={e => setName(e.target.value)} /></div>
-      <div><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>기간 표시</label><input style={inputStyle} value={dates} onChange={e => setDates(e.target.value)} /></div>
-      <div><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>출발일 (D-Day용)</label><input type="date" style={inputStyle} value={sd} onChange={e => setSd(e.target.value)} /></div>
-      <div style={{ display: "flex", gap: S.sm }}>
-        <div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>인원</label><input type="number" style={inputStyle} value={trav} onChange={e => setTrav(e.target.value)} /></div>
-        <div style={{ flex: 1 }}><label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>환율 ₩/¥</label><input type="number" step="0.01" style={inputStyle} value={rate} onChange={e => setRate(e.target.value)} /></div>
-      </div>
-      <button style={btnPrimary} onClick={() => onSave({ name, emoji, dates, startDate: sd, travelers: Number(trav), rate: Number(rate) })}>저장</button>
     </div>
   );
 }

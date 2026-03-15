@@ -191,7 +191,7 @@ export default function App() {
           <Dialog.Content style={{ maxWidth: 380, borderRadius: T.r + 4, padding: S.xxl, position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: T.cardBg, zIndex: 1000, width: "90vw" }}>
             {dialog?.type === "item" && (
               <>
-                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>{dialog.isNew ? "📌 일정 추가" : "✏️ 일정 수정"}</Dialog.Title></div>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{dialog.isNew ? "📌 일정 추가" : "✏️ 일정 수정"}</Dialog.Title></div>
                 <ItemForm
                   item={dialog.isNew ? null : trip.days[dialog.dayIdx]?.items[dialog.itemIdx]}
                   onSave={(item) => {
@@ -220,25 +220,25 @@ export default function App() {
             )}
             {dialog?.type === "addExp" && (
               <>
-                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>💰 경비 추가</Dialog.Title></div>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>💰 경비 추가</Dialog.Title></div>
                 <AddExpForm rate={trip.rate} days={trip.days} onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setDialog(null); }} />
               </>
             )}
             {dialog?.type === "addChk" && (
               <>
-                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>✅ 체크리스트 추가</Dialog.Title></div>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>✅ 체크리스트 추가</Dialog.Title></div>
                 <AddChkForm onAdd={(item) => { updateTrip({ checklist: [...trip.checklist, { ...item, id: nextId(trip.checklist), done: false }] }); setDialog(null); }} />
               </>
             )}
             {dialog?.type === "settings" && (
               <>
-                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>⚙️ 여행 설정</Dialog.Title></div>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>⚙️ 여행 설정</Dialog.Title></div>
                 <SettingsForm trip={trip} theme={theme} setTheme={setTheme} onSave={(upd) => { updateTrip(upd); setDialog(null); }} />
               </>
             )}
             {dialog?.type === "trip" && (
               <>
-                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>🌏 여행 관리</Dialog.Title></div>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>🌏 여행 관리</Dialog.Title></div>
                 <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
                   {trips.map((t) => (
                     <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 600 }}>

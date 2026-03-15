@@ -16,6 +16,7 @@ import AddExpForm from "./components/forms/AddExpForm";
 import AddChkForm from "./components/forms/AddChkForm";
 import AddTripForm from "./components/forms/AddTripForm";
 import SettingsForm from "./components/forms/SettingsForm";
+import Toast, { useToast } from "./components/ui/Toast";
 
 export default function App() {
   const {
@@ -25,6 +26,7 @@ export default function App() {
     budgetSummary, checklistSummary, todayDayIndex, ddayText, exportCSV,
   } = useTrips();
   const { theme, setTheme } = useTheme();
+  const { toast, show: showToast } = useToast();
 
   const [expandedDay, setExpandedDay] = useState(0);
   const [checklistFilter, setChecklistFilter] = useState("전체");
@@ -104,7 +106,6 @@ export default function App() {
           <div style={{ display: "flex", gap: S.xs, flexShrink: 0 }}>
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => setTheme(theme === "dark" ? "light" : theme === "light" ? "dark" : "dark")}>{theme === "dark" ? "☀️" : "🌙"}</button>
             <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", padding: S.xs }} onClick={() => setDialog({ type: "settings" })}>⚙️</button>
-            <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs, color: T.textMuted }} onClick={reset}>↺</button>
           </div>
         </div>
 
@@ -118,7 +119,7 @@ export default function App() {
       </div>
 
       {/* Tabs */}
-      <div style={{ padding: `0 ${S.xl}px` }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 20, padding: `${S.sm}px ${S.xl}px`, background: `linear-gradient(180deg, ${T.cream}, ${T.cream}ee)`, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}>
         <div style={{ display: "flex", gap: S.xs, ...glass, padding: S.xs }}>
           {[
             { value: "itinerary", emoji: "📅", label: "일정" },
@@ -168,13 +169,16 @@ export default function App() {
         {tab === "memo" && <MemoTab trip={trip} updateTrip={updateTrip} />}
       </div>
 
-      {/* FAB */}
-      <div style={{ position: "fixed", bottom: S.xxl, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: S.md, zIndex: 50 }}>
+      {/* Toast */}
+      <Toast message={toast} />
+
+      {/* FAB — budget tab only */}
+      {tab === "budget" && <div style={{ position: "fixed", bottom: S.xxl, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: S.md, zIndex: 50 }}>
         {fabOpen && (
           <div style={{ ...glass, width: 300, padding: S.lg, boxShadow: T.shadowLg }} className="fade-in">
             <QuickExp
               rate={trip.rate} days={trip.days}
-              onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setFabOpen(false); }}
+              onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setFabOpen(false); showToast("경비가 추가되었습니다"); }}
               onClose={() => setFabOpen(false)}
             />
           </div>
@@ -182,13 +186,14 @@ export default function App() {
         <button onClick={() => setFabOpen(!fabOpen)} style={{ width: 52, height: 52, borderRadius: "50%", border: "none", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 22, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px rgba(224,116,96,0.25)", animation: fabOpen ? "none" : "pulse 2s infinite" }}>
           {fabOpen ? "✕" : "₩"}
         </button>
-      </div>
+      </div>}
 
       {/* Dialogs */}
       <Dialog.Root open={!!dialog} onOpenChange={() => setDialog(null)}>
         <Dialog.Portal>
           <Dialog.Overlay style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 999 }} />
           <Dialog.Content style={{ maxWidth: 380, borderRadius: T.r + 4, padding: S.xxl, position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: T.cardBg, zIndex: 1000, width: "90vw" }}>
+            <Dialog.Close asChild><button style={{ position: "absolute", top: S.md, right: S.md, background: "none", border: "none", fontSize: 18, cursor: "pointer", color: T.textMuted, padding: S.xs, lineHeight: 1 }}>✕</button></Dialog.Close>
             {dialog?.type === "item" && (
               <>
                 <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>{dialog.isNew ? "📌 일정 추가" : "✏️ 일정 수정"}</Dialog.Title></div>
@@ -205,6 +210,7 @@ export default function App() {
                     }
                     updateTrip({ days: nextDays });
                     setDialog(null);
+                    showToast(dialog.isNew ? "일정이 추가되었습니다" : "일정이 수정되었습니다");
                   }}
                   onDelete={dialog.isNew ? null : () => setConfirmDelete({
                     msg: "삭제할까요?",
@@ -213,6 +219,7 @@ export default function App() {
                       nextDays[dialog.dayIdx] = { ...nextDays[dialog.dayIdx], items: nextDays[dialog.dayIdx].items.filter((_, i) => i !== dialog.itemIdx) };
                       updateTrip({ days: nextDays });
                       setDialog(null);
+                      showToast("삭제되었습니다");
                     },
                   })}
                 />
@@ -221,19 +228,19 @@ export default function App() {
             {dialog?.type === "addExp" && (
               <>
                 <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>💰 경비 추가</Dialog.Title></div>
-                <AddExpForm rate={trip.rate} days={trip.days} onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setDialog(null); }} />
+                <AddExpForm rate={trip.rate} days={trip.days} onAdd={(exp) => { updateTrip({ expenses: [...trip.expenses, { ...exp, id: nextId(trip.expenses) }] }); setDialog(null); showToast("경비가 추가되었습니다"); }} />
               </>
             )}
             {dialog?.type === "addChk" && (
               <>
                 <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>✅ 체크리스트 추가</Dialog.Title></div>
-                <AddChkForm onAdd={(item) => { updateTrip({ checklist: [...trip.checklist, { ...item, id: nextId(trip.checklist), done: false }] }); setDialog(null); }} />
+                <AddChkForm onAdd={(item) => { updateTrip({ checklist: [...trip.checklist, { ...item, id: nextId(trip.checklist), done: false }] }); setDialog(null); showToast("체크리스트에 추가되었습니다"); }} />
               </>
             )}
             {dialog?.type === "settings" && (
               <>
                 <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>⚙️ 여행 설정</Dialog.Title></div>
-                <SettingsForm trip={trip} theme={theme} setTheme={setTheme} onSave={(upd) => { updateTrip(upd); setDialog(null); }} />
+                <SettingsForm trip={trip} theme={theme} setTheme={setTheme} onSave={(upd) => { updateTrip(upd); setDialog(null); showToast("설정이 저장되었습니다"); }} onReset={() => setConfirmDelete({ msg: "모든 데이터가 삭제되고 초기 상태로 돌아갑니다. 정말 초기화하시겠습니까?", onOk: () => { reset(); setDialog(null); showToast("초기화되었습니다"); } })} />
               </>
             )}
             {dialog?.type === "trip" && (

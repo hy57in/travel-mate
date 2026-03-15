@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 
+const REDIRECT_URL = import.meta.env.VITE_REDIRECT_URL || window.location.origin;
+
 export default function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +26,7 @@ export default function useAuth() {
     if (!supabase) return { error: "Supabase not configured" };
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin },
+      options: { emailRedirectTo: REDIRECT_URL },
     });
     return { error: error?.message };
   }, []);
@@ -33,7 +35,7 @@ export default function useAuth() {
     if (!supabase) return;
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: REDIRECT_URL },
     });
   }, []);
 

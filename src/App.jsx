@@ -205,7 +205,7 @@ export default function App() {
             setDialog={setDialog} setConfirmDelete={setConfirmDelete} updateTrip={updateTrip}
           />
         )}
-        {tab === "map" && <MapTab trip={trip} />}
+        {tab === "map" && <MapTab trip={trip} updateTrip={updateTrip} />}
         {tab === "memo" && <MemoTab trip={trip} updateTrip={updateTrip} />}
       </div>
 

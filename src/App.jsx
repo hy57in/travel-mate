@@ -131,8 +131,7 @@ export default function App() {
             <button style={{ ...pill(false), border: `1.5px dashed ${T.textMuted}`, padding: "5px 10px" }} onClick={() => setDialog({ type: "trip" })}>＋</button>
           </div>
           <div style={{ display: "flex", gap: S.xs, flexShrink: 0, alignItems: "center" }}>
-            {isOnline && !user && <button style={{ background: "none", border: "none", fontSize: 11, cursor: "pointer", padding: `${S.xs}px ${S.sm}px`, color: T.mint, fontWeight: 700, borderRadius: 50, border: `1.5px solid ${T.mint}` }} onClick={() => setDialog({ type: "login" })}>로그인</button>}
-            {user && <button style={{ width: 24, height: 24, borderRadius: "50%", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }} title={user.email} onClick={signOut}>{user.email?.[0]?.toUpperCase()}</button>}
+            {user && <button style={{ width: 24, height: 24, borderRadius: "50%", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: "none", cursor: "pointer" }} title={`${user.email}\n로그아웃`} onClick={signOut}>{user.email?.[0]?.toUpperCase()}</button>}
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => { navigator.clipboard.writeText(shareTrip()); showToast("일정이 복사되었습니다"); }}>📋</button>
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => setTheme(theme === "dark" ? "light" : theme === "light" ? "dark" : "dark")}>{theme === "dark" ? "☀️" : "🌙"}</button>
             <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", padding: S.xs }} onClick={() => setDialog({ type: "settings" })}>⚙️</button>
@@ -146,6 +145,14 @@ export default function App() {
           </div>
           {ddayText ? <div style={{ background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", borderRadius: T.rSm, padding: scrolled ? `${S.xs}px ${S.md}px` : `${S.sm}px ${S.lg}px`, fontSize: scrolled ? 12 : 16, fontWeight: 700, letterSpacing: -0.5, transition: "all 0.25s ease" }}>{ddayText}</div> : null}
         </div>
+
+        {isOnline && !user && (
+          <button onClick={() => setDialog({ type: "login" })} style={{ ...glass, width: "100%", marginTop: S.sm, padding: `${S.sm}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, border: `1.5px solid ${T.mint}33`, cursor: "pointer", borderRadius: T.rSm }}>
+            <span style={{ fontSize: 16 }}>🔐</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: T.text, flex: 1, textAlign: "left" }}>로그인하면 클라우드 저장 + 실시간 공유</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: T.mint }}>로그인</span>
+          </button>
+        )}
       </div>
 
       {/* Tabs */}

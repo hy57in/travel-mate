@@ -7,7 +7,7 @@ import ExpInline from "./forms/ExpInline";
 export default function BudgetTab({
   trip, expenseFilter, setExpenseFilter, filteredExpenses, confirmedAmount, estimatedAmount, total, perPerson,
   categoryTotals, donutData, editingExpenseId, setEditingExpenseId,
-  setDialog, setConfirmDeleteete, updateTrip, exportCSV,
+  setDialog, setConfirmDelete, updateTrip, exportCSV,
 }) {
   return (
     <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.lg }}>

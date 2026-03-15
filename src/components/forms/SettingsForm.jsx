@@ -2,7 +2,7 @@ import { useState } from "react";
 import { S, T } from "../../tokens";
 import { pill, inputStyle, btnPrimary } from "../../styles";
 
-export default function SettingsForm({ trip, theme, setTheme, onSave }) {
+export default function SettingsForm({ trip, theme, setTheme, onSave, onReset }) {
   const [name, setName] = useState(trip.name);
   const [emoji, setEmoji] = useState(trip.emoji);
   const [dates, setDates] = useState(trip.dates);
@@ -45,6 +45,11 @@ export default function SettingsForm({ trip, theme, setTheme, onSave }) {
         </div>
       )}
       <button style={btnPrimary} onClick={() => onSave({ name, emoji, dates, startDate: sd, travelers: Number(trav), rate: Number(rate) })}>저장</button>
+      {onReset && (
+        <button style={{ background: "none", border: "none", fontSize: 12, color: T.textMuted, cursor: "pointer", marginTop: S.sm, textAlign: "center", width: "100%" }} onClick={onReset}>
+          ↺ 모든 데이터 초기화
+        </button>
+      )}
     </div>
   );
 }

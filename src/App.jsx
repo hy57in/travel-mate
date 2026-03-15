@@ -99,6 +99,7 @@ export default function App() {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes dialogIn { from { opacity: 0; transform: translate(-50%,-50%) scale(0.95); } to { opacity: 1; transform: translate(-50%,-50%) scale(1); } }
         @keyframes checkPop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
         .fade-in { animation: fadeIn 0.25s ease-out; }
         .slide-in { animation: slideIn 0.2s ease-out; }
@@ -214,7 +215,7 @@ export default function App() {
       <Dialog.Root open={!!dialog} onOpenChange={() => setDialog(null)}>
         <Dialog.Portal>
           <Dialog.Overlay style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 999 }} />
-          <Dialog.Content className="scale-in" style={{ maxWidth: 380, borderRadius: T.r + 4, padding: S.xxl, position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: T.cardBg, zIndex: 1000, width: "90vw" }}>
+          <Dialog.Content style={{ maxWidth: 380, borderRadius: T.r + 4, padding: S.xxl, position: "fixed", top: "50%", left: "50%", transform: "translate(-50%,-50%)", background: T.cardBg, zIndex: 1000, width: "90vw", animation: "dialogIn 0.2s ease-out" }}>
             <Dialog.Close asChild><button style={{ position: "absolute", top: S.md, right: S.md, background: "none", border: "none", fontSize: 18, cursor: "pointer", color: T.textMuted, padding: S.xs, lineHeight: 1 }}>✕</button></Dialog.Close>
             {dialog?.type === "item" && (
               <>

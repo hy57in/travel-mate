@@ -6,6 +6,7 @@ import { glass, pill, btnPrimary, btnOutline } from "./styles";
 import useTrips from "./hooks/useTrips";
 import useTheme from "./hooks/useTheme";
 import useWeather from "./hooks/useWeather";
+import useAuth from "./hooks/useAuth";
 
 import ItineraryTab from "./components/ItineraryTab";
 import BudgetTab from "./components/BudgetTab";
@@ -21,12 +22,13 @@ import AITripForm from "./components/forms/AITripForm";
 import Toast, { useToast } from "./components/ui/Toast";
 
 export default function App() {
+  const { user, loading: authLoading, signInWithGoogle, signOut, isOnline } = useAuth();
   const {
     trips, activeId, setActiveId, loading, trip,
     persist, updateTrip, reset, nextId,
     sortDayItems, reorderItems, addDay, deleteDay, updateDay,
     budgetSummary, checklistSummary, todayDayIndex, ddayText, shareTrip, exportCSV,
-  } = useTrips();
+  } = useTrips(user);
   const { theme, setTheme } = useTheme();
   const weather = useWeather(trip?.startDate, trip?.days);
   const { toast, show: showToast } = useToast();
@@ -127,7 +129,9 @@ export default function App() {
             ))}
             <button style={{ ...pill(false), border: `1.5px dashed ${T.textMuted}`, padding: "5px 10px" }} onClick={() => setDialog({ type: "trip" })}>＋</button>
           </div>
-          <div style={{ display: "flex", gap: S.xs, flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: S.xs, flexShrink: 0, alignItems: "center" }}>
+            {isOnline && !user && <button style={{ background: "none", border: "none", fontSize: 11, cursor: "pointer", padding: `${S.xs}px ${S.sm}px`, color: T.mint, fontWeight: 700, borderRadius: 50, border: `1.5px solid ${T.mint}` }} onClick={signInWithGoogle}>로그인</button>}
+            {user && <span style={{ width: 24, height: 24, borderRadius: "50%", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }} title={user.email}>{user.email?.[0]?.toUpperCase()}</span>}
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => { navigator.clipboard.writeText(shareTrip()); showToast("일정이 복사되었습니다"); }}>📋</button>
             <button style={{ background: "none", border: "none", fontSize: 16, cursor: "pointer", padding: S.xs }} onClick={() => setTheme(theme === "dark" ? "light" : theme === "light" ? "dark" : "dark")}>{theme === "dark" ? "☀️" : "🌙"}</button>
             <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", padding: S.xs }} onClick={() => setDialog({ type: "settings" })}>⚙️</button>

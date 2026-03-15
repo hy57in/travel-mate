@@ -17,6 +17,7 @@ import AddExpForm from "./components/forms/AddExpForm";
 import AddChkForm from "./components/forms/AddChkForm";
 import AddTripForm from "./components/forms/AddTripForm";
 import SettingsForm from "./components/forms/SettingsForm";
+import AITripForm from "./components/forms/AITripForm";
 import Toast, { useToast } from "./components/ui/Toast";
 
 export default function App() {
@@ -281,7 +282,20 @@ export default function App() {
                   ))}
                   <div style={{ height: 1, background: T.divider }} />
                   <AddTripForm onAdd={(t) => { const newTrip = { ...t, id: `trip-${Date.now()}`, days: [], expenses: [], checklist: [], memo: "", rate: t.rate || 9.29 }; persist([...trips, newTrip], newTrip.id); setDialog(null); }} />
+                  <div style={{ height: 1, background: T.divider }} />
+                  <button style={{ ...pill(false), border: `1.5px dashed ${T.violet}`, color: T.violet, width: "100%", textAlign: "center", padding: `${S.sm}px 0` }} onClick={() => setDialog({ type: "ai" })}>✨ AI 일정 생성</button>
                 </div>
+              </>
+            )}
+            {dialog?.type === "ai" && (
+              <>
+                <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700, color: T.text }}>✨ AI 일정 생성</Dialog.Title></div>
+                <AITripForm onGenerate={(result) => {
+                  const newTrip = { id: `trip-${Date.now()}`, name: result.days[0]?.title?.split(" ")[0] || "AI 여행", emoji: "✨", dates: "", startDate: "", travelers: 2, travelerNames: [], rate: 9.29, days: result.days, expenses: [], checklist: [], memo: "" };
+                  persist([...trips, newTrip], newTrip.id);
+                  setDialog(null);
+                  showToast("AI 일정이 생성되었습니다");
+                }} />
               </>
             )}
           </Dialog.Content>

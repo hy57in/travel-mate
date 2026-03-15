@@ -12,6 +12,7 @@ import ItineraryTab from "./components/ItineraryTab";
 import BudgetTab from "./components/BudgetTab";
 import ChecklistTab from "./components/ChecklistTab";
 import MemoTab from "./components/MemoTab";
+import MapTab from "./components/MapTab";
 import QuickExp from "./components/forms/QuickExp";
 import ItemForm from "./components/forms/ItemForm";
 import AddExpForm from "./components/forms/AddExpForm";
@@ -155,6 +156,7 @@ export default function App() {
             { value: "itinerary", emoji: "📅", label: "일정" },
             { value: "budget", emoji: "💰", label: "경비" },
             { value: "checklist", emoji: "✅", label: `체크 ${checkDone}/${checkTotal}` },
+            { value: "map", emoji: "🗺️", label: "지도" },
             { value: "memo", emoji: "📝", label: "메모" },
           ].map((t) => (
             <button key={t.value} onClick={() => setTab(t.value)} style={{
@@ -203,6 +205,7 @@ export default function App() {
             setDialog={setDialog} setConfirmDelete={setConfirmDelete} updateTrip={updateTrip}
           />
         )}
+        {tab === "map" && <MapTab trip={trip} />}
         {tab === "memo" && <MemoTab trip={trip} updateTrip={updateTrip} />}
       </div>
 

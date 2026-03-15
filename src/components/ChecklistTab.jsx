@@ -30,7 +30,7 @@ function SortableCheckItem({ id, item, editingCheckId, setEditingCheckId, setCon
   return (
     <div ref={setNodeRef} style={{ ...style, ...glass, padding: `${S.md}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, boxShadow: isDragging ? T.shadowLg : undefined }}>
       <div {...attributes} {...listeners} style={{ cursor: "grab", touchAction: "none", fontSize: 14, color: T.textMuted, flexShrink: 0, padding: `${S.xs}px`, lineHeight: 1, userSelect: "none" }}>⠿</div>
-      <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", flexShrink: 0 }} onClick={() => updateTrip({ checklist: trip.checklist.map(x => x.id === item.id ? { ...x, done: !x.done } : x) })}>
+      <button className="check-pop" style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", flexShrink: 0 }} onClick={() => updateTrip({ checklist: trip.checklist.map(x => x.id === item.id ? { ...x, done: !x.done } : x) })}>
         {item.done ? "☑️" : "⬜"}
       </button>
       <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setEditingCheckId(item.id)}>
@@ -131,7 +131,7 @@ export default function ChecklistTab({
           </div>
         </SortableContext>
       </DndContext>
-      {!filteredChecklist.length && <Empty emoji="✅" text="체크리스트 비어있어요" />}
+      {!filteredChecklist.length && <Empty emoji="✅" text="체크리스트 비어있어요" action="＋ 추가" onAction={() => setDialog({ type: "addChk" })} />}
     </div>
   );
 }

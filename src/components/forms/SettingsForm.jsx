@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { S, T } from "../../tokens";
-import { inputStyle, btnPrimary } from "../../styles";
+import { pill, inputStyle, btnPrimary } from "../../styles";
 
-export default function SettingsForm({ trip, onSave }) {
+export default function SettingsForm({ trip, theme, setTheme, onSave }) {
   const [name, setName] = useState(trip.name);
   const [emoji, setEmoji] = useState(trip.emoji);
   const [dates, setDates] = useState(trip.dates);
@@ -34,6 +34,16 @@ export default function SettingsForm({ trip, onSave }) {
           <input type="number" step="0.01" style={inputStyle} value={rate} onChange={e => setRate(e.target.value)} />
         </div>
       </div>
+      {theme != null && (
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>테마</label>
+          <div style={{ display: "flex", gap: S.xs }}>
+            {[["auto", "자동"], ["light", "라이트"], ["dark", "다크"]].map(([v, l]) => (
+              <button key={v} style={{ ...pill(theme === v), flex: 1, textAlign: "center" }} onClick={() => setTheme(v)}>{l}</button>
+            ))}
+          </div>
+        </div>
+      )}
       <button style={btnPrimary} onClick={() => onSave({ name, emoji, dates, startDate: sd, travelers: Number(trav), rate: Number(rate) })}>저장</button>
     </div>
   );

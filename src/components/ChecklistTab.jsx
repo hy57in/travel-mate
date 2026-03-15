@@ -15,7 +15,7 @@ export default function ChecklistTab({
           <span style={{ fontSize: 30, fontWeight: 800, color: T.text }}>{ckPct}%</span>
           <span style={{ fontSize: 12, color: T.textSoft }}>{ckDone}/{ckTot} 완료</span>
         </div>
-        <div style={{ height: 6, borderRadius: 3, background: "#eee", overflow: "hidden" }}>
+        <div style={{ height: 6, borderRadius: 3, background: T.divider, overflow: "hidden" }}>
           <div style={{ height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${T.coral}, ${T.amber})`, width: `${ckPct}%`, transition: "width 0.3s" }} />
         </div>
       </div>

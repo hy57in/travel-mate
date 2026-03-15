@@ -37,8 +37,8 @@ export default function ExpInline({ e, rate, days, travelerNames, onSave, onCanc
         </div>
       )}
       <div style={{ display: "flex", gap: S.sm }}>
+        <button style={{ ...btnOutline, flex: 1 }} onClick={onCancel}>취소</button>
         <button style={{ ...btnPrimary, flex: 1 }} onClick={() => onSave({ name, amt: Number(amt), cat, day, paidBy })}>저장</button>
-        <button style={{ ...btnOutline, flex: 0 }} onClick={onCancel}>취소</button>
       </div>
     </div>
   );

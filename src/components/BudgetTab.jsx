@@ -5,9 +5,9 @@ import Empty from "./ui/Empty";
 import ExpInline from "./forms/ExpInline";
 
 export default function BudgetTab({
-  trip, exF, setExF, fExp, okAmt, estAmt, tot, pp,
-  catT, donutData, editExp, setEditExp,
-  setDlg, setConfirmDel, ut, exportCSV,
+  trip, expenseFilter, setExpenseFilter, filteredExpenses, confirmedAmount, estimatedAmount, total, perPerson,
+  categoryTotals, donutData, editingExpenseId, setEditingExpenseId,
+  setDialog, setConfirmDeleteete, updateTrip, exportCSV,
 }) {
   return (
     <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.lg }}>
@@ -16,26 +16,26 @@ export default function BudgetTab({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>총 예상 경비</div>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: S.xs, fontVariantNumeric: "tabular-nums" }}>₩{fmt(tot)}</div>
-            <div style={{ fontSize: 12, opacity: 0.6, marginTop: S.xs }}>¥{fmt(toY(tot, trip.rate))}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, marginTop: S.xs, fontVariantNumeric: "tabular-nums" }}>₩{fmt(total)}</div>
+            <div style={{ fontSize: 12, opacity: 0.6, marginTop: S.xs }}>¥{fmt(toY(total, trip.rate))}</div>
           </div>
           <Donut data={donutData} size={72} />
         </div>
         <div style={{ display: "flex", gap: S.lg, marginTop: S.md, fontSize: 12 }}>
-          <span style={{ display: "flex", alignItems: "center", gap: S.xs }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.mint, display: "inline-block" }} />확정 ₩{fmt(okAmt)}</span>
-          <span style={{ display: "flex", alignItems: "center", gap: S.xs }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.amber, display: "inline-block" }} />예상 ₩{fmt(estAmt)}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: S.xs }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.mint, display: "inline-block" }} />확정 ₩{fmt(confirmedAmount)}</span>
+          <span style={{ display: "flex", alignItems: "center", gap: S.xs }}><span style={{ width: 7, height: 7, borderRadius: "50%", background: T.amber, display: "inline-block" }} />예상 ₩{fmt(estimatedAmount)}</span>
         </div>
         <div style={{ marginTop: S.md, background: "rgba(255,255,255,0.12)", borderRadius: S.sm, padding: `${S.sm}px ${S.md}px`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <span style={{ fontSize: 12, opacity: 0.8 }}>1인당</span>
-          <span style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>₩{fmt(pp)}</span>
+          <span style={{ fontSize: 17, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>₩{fmt(perPerson)}</span>
         </div>
       </div>
 
       {/* Category legend */}
       <div style={{ display: "flex", gap: S.sm, overflow: "hidden" }}>
-        {Object.entries(catT).map(([c, a]) => {
+        {Object.entries(categoryTotals).map(([c, a]) => {
           const ct = CAT[c] || CAT["기타"];
-          const pct = tot > 0 ? Math.round((a / tot) * 100) : 0;
+          const pct = total > 0 ? Math.round((a / total) * 100) : 0;
           return <span key={c} style={{ fontSize: 11, fontWeight: 700, padding: "4px 10px", borderRadius: 20, background: ct.bg, color: ct.color, whiteSpace: "nowrap" }}>{ct.emoji} {c} {pct}%</span>;
         })}
       </div>
@@ -72,34 +72,34 @@ export default function BudgetTab({
       {/* Filter + actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", gap: S.xs, overflow: "hidden" }}>
-          {["전체", ...EC].map(c => <button key={c} style={pill(exF === c)} onClick={() => setExF(c)}>{c}</button>)}
+          {["전체", ...EC].map(c => <button key={c} style={pill(expenseFilter === c)} onClick={() => setExpenseFilter(c)}>{c}</button>)}
         </div>
         <div style={{ display: "flex", gap: S.sm, flexShrink: 0 }}>
           <button onClick={exportCSV} style={{ ...btnOutline, padding: "6px 10px", fontSize: 12 }}>📥</button>
-          <button onClick={() => setDlg({ type: "addExp" })} style={{ ...pill(false), border: `1.5px dashed ${T.coral}`, color: T.coral }}>＋ 추가</button>
+          <button onClick={() => setDialog({ type: "addExp" })} style={{ ...pill(false), border: `1.5px dashed ${T.coral}`, color: T.coral }}>＋ 추가</button>
         </div>
       </div>
 
       {/* Expense list */}
       <div style={{ display: "flex", flexDirection: "column", gap: S.sm }}>
-        {fExp.map(e => {
+        {filteredExpenses.map(e => {
           const ct = CAT[e.cat] || CAT["기타"];
-          if (editExp === e.id) {
+          if (editingExpenseId === e.id) {
             return (
               <div key={e.id} style={{ ...glass, padding: S.lg }}>
                 <ExpInline
                   e={e}
                   rate={trip.rate}
                   days={trip.days}
-                  onSave={upd => { ut({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ...upd } : x) }); setEditExp(null); }}
-                  onCancel={() => setEditExp(null)}
+                  onSave={upd => { updateTrip({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ...upd } : x) }); setEditingExpenseId(null); }}
+                  onCancel={() => setEditingExpenseId(null)}
                 />
               </div>
             );
           }
           return (
-            <div key={e.id} style={{ ...glass, padding: `${S.md}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, borderLeft: `4px solid ${ct.color}`, cursor: "pointer" }} onClick={() => setEditExp(e.id)}>
-              <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); ut({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ok: !x.ok } : x) }); }}>
+            <div key={e.id} style={{ ...glass, padding: `${S.md}px ${S.lg}px`, display: "flex", alignItems: "center", gap: S.sm, borderLeft: `4px solid ${ct.color}`, cursor: "pointer" }} onClick={() => setEditingExpenseId(e.id)}>
+              <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); updateTrip({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ok: !x.ok } : x) }); }}>
                 {e.ok ? "✅" : "⭕"}
               </button>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -113,12 +113,12 @@ export default function BudgetTab({
                 <div style={{ fontSize: 14, fontWeight: 700, color: T.text }}>₩{fmt(e.amt)}</div>
                 <div style={{ fontSize: 10, color: T.textMuted }}>¥{fmt(toY(e.amt, trip.rate))}</div>
               </div>
-              <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted, flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); setConfirmDel({ msg: `"${e.name}" 삭제?`, onOk: () => ut({ expenses: trip.expenses.filter(x => x.id !== e.id) }) }); }}>🗑</button>
+              <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: T.textMuted, flexShrink: 0 }} onClick={ev => { ev.stopPropagation(); setConfirmDelete({ msg: `"${e.name}" 삭제?`, onOk: () => updateTrip({ expenses: trip.expenses.filter(x => x.id !== e.id) }) }); }}>🗑</button>
             </div>
           );
         })}
       </div>
-      {!fExp.length && <Empty emoji="💰" text="경비가 없어요" />}
+      {!filteredExpenses.length && <Empty emoji="💰" text="경비가 없어요" />}
     </div>
   );
 }

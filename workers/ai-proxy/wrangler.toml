@@ -1,0 +1,6 @@
+name = "travel-mate-ai"
+main = "src/index.js"
+compatibility_date = "2025-12-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://travel-mate.pages.dev"

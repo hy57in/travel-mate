@@ -92,7 +92,7 @@ function MapContent({ visibleDays, searchResult, trip, onAddToDay }) {
                     <div style={{ fontSize: 10, fontWeight: 700, color, marginBottom: 2 }}>Day {di + 1} · {day.title}</div>
                     <div style={{ fontSize: 13, fontWeight: 700 }}>{it.text}</div>
                     <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>{it.time}</div>
-                    <a href={`https://www.google.com/maps/search/?api=1&query=${it.lat},${it.lng}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ECDC4", textDecoration: "none", fontWeight: 700 }}>📍 구글맵 열기</a>
+                    <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(it.text)}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#4ECDC4", textDecoration: "none", fontWeight: 700 }}>📍 구글맵 열기</a>
                   </div>
                 </InfoWindow>
               )}

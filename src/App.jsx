@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { S, T, CAT, fmt, toY } from "./tokens";
+import { S, T, CAT, fmt, toY, THEME_LIGHT, THEME_DARK } from "./tokens";
 import { glass, pill, btnPrimary, btnOutline } from "./styles";
 import { load, save } from "./storage";
 
@@ -119,6 +119,7 @@ export default function App() {
   const [confirmDel, setConfirmDel] = useState(null);
   const [editExp, setEditExp] = useState(null);
   const [editChk, setEditChk] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem("tp-theme") || "auto");
 
   useEffect(() => {
     const data = load();
@@ -126,9 +127,36 @@ export default function App() {
     setLoading(false);
   }, []);
 
+  // 테마 적용
+  const isDark = theme === "dark" || (theme === "auto" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  useEffect(() => {
+    localStorage.setItem("tp-theme", theme);
+    if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+    else document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+  useEffect(() => {
+    if (theme !== "auto") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => setTheme(t => t === "auto" ? "auto" : t); // force re-render
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [theme]);
+
   const persist = useCallback((nt, na) => { setTrips(nt); if (na) setAid(na); save({ trips: nt, aid: na || aid }); }, [aid]);
   const trip = trips?.find(t => t.id === aid);
   const ut = useCallback(u => { persist(trips.map(t => t.id === aid ? { ...t, ...u } : t)); }, [trips, aid, persist]);
+
+  // 여행 시작일 기준 오늘의 Day 인덱스 계산
+  const todayDayIdx = (() => {
+    if (!trip?.startDate || !trip.days.length) return -1;
+    const diff = Math.floor((new Date().setHours(0,0,0,0) - new Date(trip.startDate).setHours(0,0,0,0)) / 86400000);
+    return diff >= 0 && diff < trip.days.length ? diff : -1;
+  })();
+
+  // 여행 전환 또는 최초 로드 시 오늘 Day 자동 펼치기
+  useEffect(() => {
+    if (todayDayIdx >= 0) setExDay(todayDayIdx);
+  }, [aid, todayDayIdx]);
   const reset = () => { setTrips(DEF); setAid(DEF[0].id); save({ trips: DEF, aid: DEF[0].id }); };
   const nid = arr => Math.max(0, ...arr.map(x => x.id)) + 1;
 
@@ -159,13 +187,38 @@ export default function App() {
     const nd = [...trip.days]; nd[di] = { ...day, items: sorted }; ut({ days: nd });
   };
 
-  const moveItem = (di, ii, dir) => {
+  const reorderItems = (di, oldIdx, newIdx) => {
     const day = trip.days[di];
-    const ni = ii + dir;
-    if (ni < 0 || ni >= day.items.length) return;
     const items = [...day.items];
-    [items[ii], items[ni]] = [items[ni], items[ii]];
+    const [moved] = items.splice(oldIdx, 1);
+    items.splice(newIdx, 0, moved);
     const nd = [...trip.days]; nd[di] = { ...day, items }; ut({ days: nd });
+  };
+
+  const addDay = () => {
+    const dayCount = trip.days.length;
+    let date = "";
+    if (trip.startDate) {
+      const d = new Date(trip.startDate);
+      d.setDate(d.getDate() + dayCount);
+      const dow = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+      date = `${d.getMonth() + 1}/${d.getDate()} (${dow})`;
+    }
+    ut({ days: [...trip.days, { date, title: `Day ${dayCount + 1}`, memo: "", items: [] }] });
+    setExDay(dayCount);
+  };
+
+  const deleteDay = (di) => {
+    setConfirmDel({ msg: `Day ${di + 1}을 삭제할까요?`, onOk: () => {
+      ut({ days: trip.days.filter((_, i) => i !== di) });
+      setExDay(-1);
+    }});
+  };
+
+  const updateDay = (di, upd) => {
+    const nd = [...trip.days];
+    nd[di] = { ...nd[di], ...upd };
+    ut({ days: nd });
   };
 
   const exportCSV = () => {
@@ -179,6 +232,9 @@ export default function App() {
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: `linear-gradient(180deg, ${T.peach} 0%, ${T.cream} 30%, ${T.sand} 100%)`, fontFamily: "'Outfit', 'Pretendard', -apple-system, sans-serif", paddingBottom: 100, position: "relative" }}>
       <style>{`
+        :root { ${THEME_LIGHT} }
+        :root[data-theme="dark"] { ${THEME_DARK} }
+        @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ${THEME_DARK} } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse { 0%,100% { transform: scale(1); box-shadow: 0 4px 16px rgba(224,116,96,0.25); } 50% { transform: scale(1.04); box-shadow: 0 6px 24px rgba(224,116,96,0.4); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -192,7 +248,7 @@ export default function App() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: S.sm }}>
           <div style={{ display: "flex", alignItems: "center", gap: S.sm, overflow: "hidden" }}>
             {trips.map(t => <button key={t.id} style={pill(t.id === aid)} onClick={() => { setAid(t.id); setExDay(0); }}>{t.emoji} {t.name}</button>)}
-            <button style={{ ...pill(false), border: "1.5px dashed #ccc", padding: "5px 10px" }} onClick={() => setDlg({ type: "trip" })}>＋</button>
+            <button style={{ ...pill(false), border: `1.5px dashed ${T.textMuted}`, padding: "5px 10px" }} onClick={() => setDlg({ type: "trip" })}>＋</button>
           </div>
           <div style={{ display: "flex", gap: S.xs, flexShrink: 0 }}>
             <button style={{ background: "none", border: "none", fontSize: 18, cursor: "pointer", padding: S.xs }} onClick={() => setDlg({ type: "settings" })}>⚙️</button>
@@ -220,8 +276,8 @@ export default function App() {
           ].map(t => (
             <button key={t.v} onClick={() => setTab(t.v)} style={{
               flex: 1, padding: "10px 0", borderRadius: T.rSm, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600, transition: "all 0.2s",
-              background: tab === t.v ? "#fff" : "transparent", color: tab === t.v ? T.text : T.textMuted,
-              boxShadow: tab === t.v ? "0 1px 6px rgba(0,0,0,0.06)" : "none",
+              background: tab === t.v ? T.cardBg : "transparent", color: tab === t.v ? T.text : T.textMuted,
+              boxShadow: tab === t.v ? T.shadow : "none",
             }}>{t.emoji} {t.l}</button>
           ))}
         </div>
@@ -229,7 +285,7 @@ export default function App() {
 
       <div style={{ padding: `${S.lg}px ${S.xl}px 0` }}>
         {tab === "itinerary" && (
-          <ItineraryTab trip={trip} exDay={exDay} setExDay={setExDay} sortDay={sortDay} moveItem={moveItem} setDlg={setDlg} />
+          <ItineraryTab trip={trip} exDay={exDay} setExDay={setExDay} sortDay={sortDay} reorderItems={reorderItems} addDay={addDay} deleteDay={deleteDay} updateDay={updateDay} todayDayIdx={todayDayIdx} setDlg={setDlg} />
         )}
         {tab === "budget" && (
           <BudgetTab
@@ -255,7 +311,7 @@ export default function App() {
       <div style={{ position: "fixed", bottom: S.xxl, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: S.md, zIndex: 50 }}>
         {fab && (
           <div style={{ ...glass, width: 300, padding: S.lg, boxShadow: T.shadowLg }} className="fade-in">
-            <QuickExp rate={trip.rate} onAdd={exp => { ut({ expenses: [...trip.expenses, { ...exp, id: nid(trip.expenses) }] }); setFab(false); }} onClose={() => setFab(false)} />
+            <QuickExp rate={trip.rate} days={trip.days} onAdd={exp => { ut({ expenses: [...trip.expenses, { ...exp, id: nid(trip.expenses) }] }); setFab(false); }} onClose={() => setFab(false)} />
           </div>
         )}
         <button onClick={() => setFab(!fab)} style={{ width: 52, height: 52, borderRadius: "50%", border: "none", background: `linear-gradient(135deg, ${T.coral}, ${T.amber})`, color: "#fff", fontSize: 22, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px rgba(224,116,96,0.25)", animation: fab ? "none" : "pulse 2s infinite" }}>{fab ? "✕" : "₩"}</button>
@@ -265,20 +321,20 @@ export default function App() {
       <Dialog.Root open={!!dlg} onOpenChange={() => setDlg(null)}>
         <Dialog.Portal>
           <Dialog.Overlay style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:999}} />
-          <Dialog.Content style={{ maxWidth: 380, borderRadius: T.r + 4, padding: S.xxl, position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"white",zIndex:1000,width:"90vw" }}>
+          <Dialog.Content style={{ maxWidth: 380, borderRadius: T.r + 4, padding: S.xxl, position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:T.cardBg,zIndex:1000,width:"90vw" }}>
           {dlg?.type === "item" && <>
             <div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>{dlg.isNew ? "📌 일정 추가" : "✏️ 일정 수정"}</Dialog.Title></div>
             <ItemForm item={dlg.isNew ? null : trip.days[dlg.dayIdx]?.items[dlg.itemIdx]}
               onSave={item => { const nd = [...trip.days]; if (dlg.isNew) nd[dlg.dayIdx] = { ...nd[dlg.dayIdx], items: [...nd[dlg.dayIdx].items, item] }; else { const ni = [...nd[dlg.dayIdx].items]; ni[dlg.itemIdx] = item; nd[dlg.dayIdx] = { ...nd[dlg.dayIdx], items: ni }; } ut({ days: nd }); setDlg(null); }}
               onDelete={dlg.isNew ? null : () => setConfirmDel({ msg: "삭제할까요?", onOk: () => { const nd = [...trip.days]; nd[dlg.dayIdx] = { ...nd[dlg.dayIdx], items: nd[dlg.dayIdx].items.filter((_, i) => i !== dlg.itemIdx) }; ut({ days: nd }); setDlg(null); } })} />
           </>}
-          {dlg?.type === "addExp" && <><div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>💰 경비 추가</Dialog.Title></div><AddExpForm rate={trip.rate} onAdd={exp => { ut({ expenses: [...trip.expenses, { ...exp, id: nid(trip.expenses) }] }); setDlg(null); }} /></>}
+          {dlg?.type === "addExp" && <><div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>💰 경비 추가</Dialog.Title></div><AddExpForm rate={trip.rate} days={trip.days} onAdd={exp => { ut({ expenses: [...trip.expenses, { ...exp, id: nid(trip.expenses) }] }); setDlg(null); }} /></>}
           {dlg?.type === "addChk" && <><div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>✅ 체크리스트 추가</Dialog.Title></div><AddChkForm onAdd={item => { ut({ checklist: [...trip.checklist, { ...item, id: nid(trip.checklist), done: false }] }); setDlg(null); }} /></>}
-          {dlg?.type === "settings" && <><div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>⚙️ 여행 설정</Dialog.Title></div><SettingsForm trip={trip} onSave={upd => { ut(upd); setDlg(null); }} /></>}
+          {dlg?.type === "settings" && <><div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>⚙️ 여행 설정</Dialog.Title></div><SettingsForm trip={trip} theme={theme} setTheme={setTheme} onSave={upd => { ut(upd); setDlg(null); }} /></>}
           {dlg?.type === "trip" && <><div><Dialog.Title style={{ fontSize: 16, fontWeight: 700 }}>🌏 여행 관리</Dialog.Title></div>
             <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
               {trips.map(t => <div key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, fontWeight: 600 }}><span>{t.emoji} {t.name}</span>{trips.length > 1 && <button style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14 }} onClick={() => { const nt = trips.filter(x => x.id !== t.id); persist(nt, t.id === aid ? nt[0].id : aid); }}>🗑</button>}</div>)}
-              <div style={{ height: 1, background: "#eee" }} />
+              <div style={{ height: 1, background: T.divider }} />
               <AddTripForm onAdd={t => { const nt = { ...t, id: `trip-${Date.now()}`, days: [], expenses: [], checklist: [], memo: "", rate: t.rate || 9.29 }; persist([...trips, nt], nt.id); setDlg(null); }} />
             </div></>}
           </Dialog.Content>
@@ -288,11 +344,11 @@ export default function App() {
       <Dialog.Root open={!!confirmDel} onOpenChange={() => setConfirmDel(null)}>
         <Dialog.Portal>
           <Dialog.Overlay style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:999}} />
-          <Dialog.Content style={{ maxWidth: 300, borderRadius: T.r + 4, padding: S.xxl, textAlign: "center", position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"white",zIndex:1000,width:"90vw" }}>
+          <Dialog.Content style={{ maxWidth: 300, borderRadius: T.r + 4, padding: S.xxl, textAlign: "center", position:"fixed",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:T.cardBg,zIndex:1000,width:"90vw" }}>
             <p style={{ fontSize: 14, color: T.text, margin: `${S.md}px 0 ${S.xl}px` }}>{confirmDel?.msg}</p>
             <div style={{ display: "flex", gap: S.sm }}>
               <button style={{ ...btnOutline, flex: 1 }} onClick={() => setConfirmDel(null)}>취소</button>
-              <button style={{ ...btnPrimary, flex: 1, background: "#EF4444" }} onClick={() => { confirmDel?.onOk(); setConfirmDel(null); }}>삭제</button>
+              <button style={{ ...btnPrimary, flex: 1, background: T.danger }} onClick={() => { confirmDel?.onOk(); setConfirmDel(null); }}>삭제</button>
             </div>
           </Dialog.Content>
         </Dialog.Portal>

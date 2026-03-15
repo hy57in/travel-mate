@@ -1,4 +1,5 @@
 import * as Switch from "@radix-ui/react-switch";
+import { T } from "../../tokens";
 
 export default function ToggleSwitch({ checked, onCheckedChange }) {
   return (
@@ -7,7 +8,7 @@ export default function ToggleSwitch({ checked, onCheckedChange }) {
       onCheckedChange={onCheckedChange}
       style={{
         width: 42, height: 25,
-        backgroundColor: checked ? "#E07460" : "#ccc",
+        backgroundColor: checked ? T.coral : T.switchOff,
         borderRadius: 50, position: "relative",
         border: "none", cursor: "pointer",
       }}

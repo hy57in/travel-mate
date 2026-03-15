@@ -12,7 +12,7 @@ export default function BudgetTab({
   return (
     <div className="fade-in" style={{ display: "flex", flexDirection: "column", gap: S.lg }}>
       {/* Summary card */}
-      <div style={{ background: `linear-gradient(135deg, ${T.indigo}, #4A3F8F)`, borderRadius: T.r, padding: S.xl, color: "#fff", boxShadow: "0 6px 24px rgba(45,53,97,0.18)" }}>
+      <div style={{ background: `linear-gradient(135deg, ${T.indigo}, ${T.budgetGrad})`, borderRadius: T.r, padding: S.xl, color: "#fff", boxShadow: T.shadowLg }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={{ fontSize: 11, opacity: 0.7, fontWeight: 600 }}>총 예상 경비</div>
@@ -40,6 +40,35 @@ export default function BudgetTab({
         })}
       </div>
 
+      {/* Day별 소계 */}
+      {trip.days.length > 0 && (() => {
+        const dayTotals = trip.days.map((d, i) => ({
+          label: `D${i + 1}`,
+          title: d.title,
+          amt: trip.expenses.filter(e => e.day === i).reduce((s, e) => s + e.amt, 0),
+        }));
+        const commonAmt = trip.expenses.filter(e => e.day == null).reduce((s, e) => s + e.amt, 0);
+        return (
+          <div style={{ ...glass, padding: S.lg }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: T.text, marginBottom: S.sm }}>📊 Day별 경비</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: S.xs }}>
+              {dayTotals.map((d, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, padding: `${S.xs}px 0` }}>
+                  <span style={{ color: T.textSoft }}><span style={{ fontWeight: 700, color: T.coral }}>{d.label}</span> {d.title}</span>
+                  <span style={{ fontWeight: 700, color: T.text, fontVariantNumeric: "tabular-nums" }}>₩{fmt(d.amt)}</span>
+                </div>
+              ))}
+              {commonAmt > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, padding: `${S.xs}px 0`, borderTop: `1px solid ${T.glassBorder}`, marginTop: S.xs }}>
+                  <span style={{ color: T.textSoft }}><span style={{ fontWeight: 700, color: T.indigo }}>공통</span> 미배정</span>
+                  <span style={{ fontWeight: 700, color: T.text, fontVariantNumeric: "tabular-nums" }}>₩{fmt(commonAmt)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Filter + actions */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", gap: S.xs, overflow: "hidden" }}>
@@ -61,6 +90,7 @@ export default function BudgetTab({
                 <ExpInline
                   e={e}
                   rate={trip.rate}
+                  days={trip.days}
                   onSave={upd => { ut({ expenses: trip.expenses.map(x => x.id === e.id ? { ...x, ...upd } : x) }); setEditExp(null); }}
                   onCancel={() => setEditExp(null)}
                 />
@@ -75,6 +105,7 @@ export default function BudgetTab({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: S.sm }}>
                   <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 8, background: ct.bg, color: ct.color, flexShrink: 0 }}>{ct.emoji} {e.cat}</span>
+                  {e.day != null && <span style={{ fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 6, background: T.coralLight, color: T.coral, flexShrink: 0 }}>D{e.day + 1}</span>}
                   <span style={{ fontSize: 13, fontWeight: 600, color: T.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.name}</span>
                 </div>
               </div>

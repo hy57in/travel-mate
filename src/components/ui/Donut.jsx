@@ -16,7 +16,7 @@ export default function Donut({ data, size = 72 }) {
           <path key={i} d={`M${r},${r} L${x1},${y1} A${ir},${ir} 0 ${large} 1 ${x2},${y2} Z`} fill={d.color} opacity={0.85} />
         ) : null;
       })}
-      <circle cx={r} cy={r} r={ir - 5} fill="white" />
+      <circle cx={r} cy={r} r={ir - 5} fill="var(--c-card-bg)" />
     </svg>
   );
 }

@@ -44,7 +44,7 @@ export default function ItemForm({ item, onSave, onDelete }) {
         <button style={{ ...btnPrimary, flex: 1 }} disabled={!time || !text} onClick={() => onSave({ time, text, type, url: url || undefined, hl, skip, pend })}>
           {item ? "수정" : "추가"}
         </button>
-        {onDelete && <button style={{ ...btnOutline, color: "#EF4444", borderColor: "#FCA5A5" }} onClick={onDelete}>삭제</button>}
+        {onDelete && <button style={{ ...btnOutline, color: T.danger, borderColor: T.dangerBorder }} onClick={onDelete}>삭제</button>}
       </div>
     </div>
   );

@@ -12,17 +12,17 @@ export const glass = {
 export const pill = (active) => ({
   padding: "6px 14px", borderRadius: 50, fontSize: 12, fontWeight: 600,
   cursor: "pointer", border: "none", transition: "all 0.2s",
-  background: active ? T.indigo : "rgba(255,255,255,0.7)",
+  background: active ? T.indigo : T.pillBg,
   color: active ? "#fff" : T.textSoft,
   whiteSpace: "nowrap", flexShrink: 0,
 });
 
 export const inputStyle = {
-  borderRadius: T.rSm, border: "1.5px solid #E5E7EB",
+  borderRadius: T.rSm, border: `1.5px solid ${T.inputBorder}`,
   padding: "10px 14px", fontSize: 13, outline: "none",
   width: "100%", boxSizing: "border-box",
-  background: "rgba(255,255,255,0.85)", fontFamily: "inherit",
-  transition: "border-color 0.15s",
+  background: T.inputBg, fontFamily: "inherit",
+  transition: "border-color 0.15s", color: T.text,
 };
 
 export const btnPrimary = {
@@ -34,6 +34,6 @@ export const btnPrimary = {
 
 export const btnOutline = {
   background: "transparent", color: T.textSoft,
-  border: "1.5px solid #E5E7EB", borderRadius: T.rSm,
+  border: `1.5px solid ${T.inputBorder}`, borderRadius: T.rSm,
   padding: "10px 16px", fontSize: 13, cursor: "pointer",
 };

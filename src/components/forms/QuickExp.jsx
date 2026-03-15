@@ -2,18 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import { S, T, EC, CAT, fmt, toY, toK } from "../../tokens";
 import { pill, inputStyle, btnPrimary } from "../../styles";
 
-export default function QuickExp({ rate, onAdd, onClose }) {
+export default function QuickExp({ rate, days, onAdd, onClose }) {
   const [name, setName] = useState("");
   const [val, setVal] = useState("");
   const [mode, setMode] = useState("yen");
   const [cat, setCat] = useState("식비");
+  const [day, setDay] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => { ref.current?.focus(); }, []);
 
   const submit = () => {
     if (!name || !val) return;
-    onAdd({ name, amt: mode === "yen" ? toK(Number(val), rate) : Number(val), cat, ok: true });
+    onAdd({ name, amt: mode === "yen" ? toK(Number(val), rate) : Number(val), cat, ok: true, day });
   };
 
   return (
@@ -36,6 +37,12 @@ export default function QuickExp({ rate, onAdd, onClose }) {
       <div style={{ display: "flex", gap: S.xs }}>
         {EC.map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11, padding: "4px 10px" }} onClick={() => setCat(c)}>{(CAT[c]||{}).emoji} {c}</button>)}
       </div>
+      {days?.length > 0 && (
+        <div style={{ display: "flex", gap: S.xs, flexWrap: "wrap" }}>
+          <button style={{ ...pill(day === null), fontSize: 11, padding: "4px 10px" }} onClick={() => setDay(null)}>공통</button>
+          {days.map((d, i) => <button key={i} style={{ ...pill(day === i), fontSize: 11, padding: "4px 10px" }} onClick={() => setDay(i)}>D{i + 1}</button>)}
+        </div>
+      )}
       <button style={btnPrimary} disabled={!name || !val} onClick={submit}>추가</button>
     </div>
   );

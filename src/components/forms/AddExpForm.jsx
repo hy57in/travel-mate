@@ -3,13 +3,14 @@ import { S, T, EC, CAT, fmt, toY, toK } from "../../tokens";
 import { pill, inputStyle, btnPrimary } from "../../styles";
 import ToggleSwitch from "../ui/ToggleSwitch";
 
-export default function AddExpForm({ rate, onAdd }) {
+export default function AddExpForm({ rate, days, onAdd }) {
   const [name, setName] = useState("");
   const [amt, setAmt] = useState("");
   const [yen, setYen] = useState("");
   const [cat, setCat] = useState("식비");
   const [ok, setOk] = useState(false);
   const [mode, setMode] = useState("krw");
+  const [day, setDay] = useState(null);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: S.md }}>
@@ -32,10 +33,19 @@ export default function AddExpForm({ rate, onAdd }) {
       <div style={{ display: "flex", gap: S.sm }}>
         {EC.map(c => <button key={c} style={{ ...pill(cat === c), fontSize: 11 }} onClick={() => setCat(c)}>{(CAT[c]||{}).emoji} {c}</button>)}
       </div>
+      {days?.length > 0 && (
+        <div>
+          <label style={{ fontSize: 11, fontWeight: 700, color: T.textSoft, display: "block", marginBottom: S.xs }}>Day 태그</label>
+          <div style={{ display: "flex", gap: S.xs, flexWrap: "wrap" }}>
+            <button style={{ ...pill(day === null), fontSize: 11, padding: "4px 10px" }} onClick={() => setDay(null)}>공통</button>
+            {days.map((d, i) => <button key={i} style={{ ...pill(day === i), fontSize: 11, padding: "4px 10px" }} onClick={() => setDay(i)}>D{i + 1}</button>)}
+          </div>
+        </div>
+      )}
       <label style={{ display: "flex", alignItems: "center", gap: S.sm, fontSize: 12, color: T.textSoft }}>
         <ToggleSwitch checked={ok} onCheckedChange={setOk} />확정 비용
       </label>
-      <button style={btnPrimary} disabled={!name || (!amt && !yen)} onClick={() => onAdd({ name, amt: Number(amt), cat, ok })}>추가하기</button>
+      <button style={btnPrimary} disabled={!name || (!amt && !yen)} onClick={() => onAdd({ name, amt: Number(amt), cat, ok, day })}>추가하기</button>
     </div>
   );
 }

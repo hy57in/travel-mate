@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { S, T, TYPES } from "../../tokens";
 import { pill, inputStyle, btnPrimary } from "../../styles";
+import { geocodePlace } from "../../utils/geocode";
 
 export default function ItemForm({ item, onSave, onDelete }) {
   const [time, setTime] = useState(item?.time || "");
@@ -14,22 +15,24 @@ export default function ItemForm({ item, onSave, onDelete }) {
   const [pend, setPend] = useState(item?.pend || false);
   const [searching, setSearching] = useState(false);
 
-  const searchPlace = () => {
-    const query = text.replace(/[#\d]+$/, "").trim();
+  const searchPlace = async () => {
+    const query = text.replace(/[#\d¥₩]+/g, "").trim();
     if (!query) return;
     setSearching(true);
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + " Tokyo Japan")}&format=json&limit=1`, {
-      headers: { "Accept-Language": "ko" },
-    })
-      .then(r => r.json())
-      .then(data => {
-        if (data[0]) {
-          setLat(Number(data[0].lat));
-          setLng(Number(data[0].lon));
-        }
-      })
-      .catch(() => {})
-      .finally(() => setSearching(false));
+    const result = await geocodePlace(query + " Tokyo Japan");
+    if (result) { setLat(result.lat); setLng(result.lng); }
+    setSearching(false);
+  };
+
+  const handleSave = async () => {
+    let finalLat = lat, finalLng = lng;
+    // Auto-geocode if no coordinates
+    if (!finalLat && text) {
+      const query = text.replace(/[#\d¥₩]+/g, "").trim() + " Tokyo Japan";
+      const result = await geocodePlace(query);
+      if (result) { finalLat = result.lat; finalLng = result.lng; }
+    }
+    onSave({ time, text, type, url: url || undefined, lat: finalLat || undefined, lng: finalLng || undefined, hl, skip, pend });
   };
 
   const statusPill = (active, label, color) => ({
@@ -94,7 +97,7 @@ export default function ItemForm({ item, onSave, onDelete }) {
           <button style={statusPill(pend, "미정", T.amber)} onClick={() => { setPend(!pend); if (!pend) { setHl(false); setSkip(false); } }}>미정</button>
         </div>
       </div>
-      <button style={btnPrimary} disabled={!time || !text} onClick={() => onSave({ time, text, type, url: url || undefined, lat: lat || undefined, lng: lng || undefined, hl, skip, pend })}>
+      <button style={btnPrimary} disabled={!time || !text} onClick={handleSave}>
         {item ? "수정" : "추가"}
       </button>
       {onDelete && (

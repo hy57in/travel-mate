@@ -97,7 +97,7 @@ export default function App() {
   };
 
   return (
-    <div ref={containerRef} style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", height: "100vh", overflowY: "auto", background: `linear-gradient(180deg, ${T.peach} 0%, ${T.cream} 30%, ${T.sand} 100%)`, fontFamily: "'Outfit', 'Pretendard', -apple-system, sans-serif", paddingBottom: 100, position: "relative" }}>
+    <div ref={containerRef} style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", height: "100vh", overflowY: "auto", background: `linear-gradient(180deg, ${T.peach} 0%, ${T.cream} 30%, ${T.sand} 100%)`, fontFamily: "'Outfit', 'Pretendard', -apple-system, sans-serif", paddingTop: "env(safe-area-inset-top)", paddingBottom: "calc(100px + env(safe-area-inset-bottom))", position: "relative" }}>
       <style>{`
         :root { ${THEME_LIGHT} }
         :root[data-theme="dark"] { ${THEME_DARK} }
@@ -237,7 +237,7 @@ export default function App() {
       <Toast message={toast} />
 
       {/* FAB — budget tab only */}
-      {tab === "budget" && <div style={{ position: "fixed", bottom: S.xxl, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: S.md, zIndex: 50 }}>
+      {tab === "budget" && <div style={{ position: "fixed", bottom: `calc(${S.xxl}px + env(safe-area-inset-bottom))`, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: S.md, zIndex: 50 }}>
         {fabOpen && (
           <div style={{ ...glass, width: 300, padding: S.lg, boxShadow: T.shadowLg }} className="fade-in">
             <QuickExp
